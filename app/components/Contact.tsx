@@ -8,21 +8,21 @@ const contactInfo = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'tu@email.com',
-    href: 'mailto:tu@email.com',
+    value: 'Jspc513@email.com',
+    href: 'mailto:Jspc513@email.com',
     color: 'primary'
   },
   {
     icon: Phone,
     label: 'Teléfono',
-    value: '+1 234 567 890',
-    href: 'tel:+1234567890',
+    value: '+57 315 277 3333',
+    href: 'tel:+573152773333',
     color: 'secondary'
   },
   {
     icon: MapPin,
     label: 'Ubicación',
-    value: 'Tu Ciudad, País',
+    value: 'Ibagué, Colombia',
     href: '#',
     color: 'tertiary'
   },

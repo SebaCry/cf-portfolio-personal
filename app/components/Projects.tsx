@@ -3,49 +3,18 @@
 import { motion, useInView } from 'framer-motion';
 import { ExternalLink, Github, Sparkles } from 'lucide-react';
 import { useRef } from 'react';
+import { TechIcons } from './TechIcons';
 
 const projects = [
   {
-    title: 'E-Commerce Platform',
-    description: 'Plataforma completa de comercio electrónico con procesamiento de pagos, gestión de inventario y panel de administración.',
-    tags: ['Next.js', 'TypeScript', 'Stripe', 'PostgreSQL'],
+    title: 'SIEKI',
+    description: 'Plataforma completa de comercio electrónico y panel administrativo para la empresa Epa Keratinas Ibague con procesamiento de pagos, gestión de inventario y panel de administración.',
+    technologies: ['Django', 'React', 'Supabase'],
+    videoUrl: '/videos/sieki-demo.mp4', // Ruta a tu video
+    githubUrl: 'https://github.com/SebaCry/django-sieki',
+    demoUrl: 'https://django-sieki.onrender.com',
     gradient: 'from-primary to-secondary',
     featured: true
-  },
-  {
-    title: 'AI Content Generator',
-    description: 'Aplicación SaaS para generar contenido con IA, incluyendo textos, imágenes y análisis de datos en tiempo real.',
-    tags: ['React', 'Python', 'OpenAI', 'FastAPI'],
-    gradient: 'from-tertiary to-primary',
-    featured: true
-  },
-  {
-    title: 'Task Management App',
-    description: 'Sistema de gestión de tareas colaborativo con tableros Kanban, seguimiento de tiempo y reportes.',
-    tags: ['Vue.js', 'Node.js', 'MongoDB', 'Socket.io'],
-    gradient: 'from-secondary to-tertiary',
-    featured: false
-  },
-  {
-    title: 'Fitness Tracker',
-    description: 'App móvil y web para seguimiento de ejercicios, nutrición y progreso personal con gráficas interactivas.',
-    tags: ['React Native', 'Firebase', 'Chart.js'],
-    gradient: 'from-primary to-tertiary',
-    featured: false
-  },
-  {
-    title: 'Real Estate Platform',
-    description: 'Plataforma inmobiliaria con búsqueda avanzada, tours virtuales 3D y sistema de agendamiento.',
-    tags: ['Next.js', 'Three.js', 'Prisma', 'Tailwind'],
-    gradient: 'from-secondary to-primary',
-    featured: false
-  },
-  {
-    title: 'Analytics Dashboard',
-    description: 'Dashboard de analíticas en tiempo real con visualizaciones interactivas y exportación de reportes.',
-    tags: ['React', 'D3.js', 'Node.js', 'Redis'],
-    gradient: 'from-tertiary to-secondary',
-    featured: false
   },
 ];
 
@@ -98,84 +67,96 @@ export default function Projects() {
         </motion.div>
 
         {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {projects.map((project, index) => (
             <motion.div
               key={project.title}
               initial={{ opacity: 0, y: 50 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={project.featured ? 'md:col-span-2 lg:col-span-1' : ''}
             >
               <motion.div
-                whileHover={{ y: -10 }}
-                className="group relative h-full p-6 rounded-2xl bg-card-bg border border-neutral/10 hover:border-primary/30 transition-all overflow-hidden"
+                whileHover={{ y: -8 }}
+                className="group relative h-full rounded-2xl bg-card-bg border border-neutral/10 hover:border-primary/30 transition-all overflow-hidden"
               >
-                {/* Gradient background */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${project.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
-
                 {/* Featured badge */}
                 {project.featured && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0 }}
                     animate={isInView ? { opacity: 1, scale: 1 } : {}}
                     transition={{ delay: index * 0.1 + 0.3 }}
-                    className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1 rounded-full bg-primary/20 border border-primary/30"
+                    className="absolute top-4 right-4 z-20 flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm border border-primary/30 shadow-lg"
                   >
-                    <Sparkles className="w-3 h-3 text-primary" />
-                    <span className="text-xs text-primary font-medium">Destacado</span>
+                    <Sparkles className="w-3 h-3 text-white" />
+                    <span className="text-xs text-white font-medium">Destacado</span>
                   </motion.div>
                 )}
 
-                {/* Content */}
-                <div className="relative z-10">
-                  {/* Project Icon/Number */}
-                  <motion.div
-                    whileHover={{ rotate: 360 }}
+                {/* Video Preview */}
+                <div className="relative w-full aspect-video bg-neutral/5 overflow-hidden">
+                  <motion.video
+                    src={project.videoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                    whileHover={{ scale: 1.05 }}
                     transition={{ duration: 0.6 }}
-                    className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${project.gradient} mb-4`}
-                  >
-                    <span className="text-white font-bold text-lg">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                  </motion.div>
+                  />
+                  {/* Video overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-card-bg via-transparent to-transparent opacity-60" />
+                </div>
 
-                  {/* Title & Description */}
-                  <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
+                {/* Content */}
+                <div className="p-6">
+                  {/* Title */}
+                  <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
                     {project.title}
                   </h3>
+
+                  {/* Description */}
                   <p className="text-neutral-variant leading-relaxed mb-6">
                     {project.description}
                   </p>
 
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {project.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-3 py-1 rounded-full bg-neutral/10 border border-neutral/20 text-neutral text-xs font-medium"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                  {/* Technologies with Icons */}
+                  <div className="flex flex-wrap gap-3 mb-6">
+                    {project.technologies.map((tech) => {
+                      const IconComponent = TechIcons[tech];
+                      return (
+                        <motion.div
+                          key={tech}
+                          whileHover={{ scale: 1.1, y: -2 }}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral/10 border border-neutral/20 hover:border-primary/30 transition-all"
+                        >
+                          {IconComponent && (
+                            <IconComponent className="w-4 h-4 text-primary" />
+                          )}
+                          <span className="text-sm font-medium text-neutral">
+                            {tech}
+                          </span>
+                        </motion.div>
+                      );
+                    })}
                   </div>
 
                   {/* Links */}
                   <div className="flex gap-3">
                     <motion.a
-                      href="#"
+                      href={project.githubUrl}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-all"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-all border border-primary/20"
                     >
                       <Github className="w-4 h-4" />
                       <span className="text-sm font-medium">Código</span>
                     </motion.a>
                     <motion.a
-                      href="#"
+                      href={project.demoUrl}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary transition-all"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-secondary/10 hover:bg-secondary/20 text-secondary transition-all border border-secondary/20"
                     >
                       <ExternalLink className="w-4 h-4" />
                       <span className="text-sm font-medium">Demo</span>
@@ -183,18 +164,8 @@ export default function Projects() {
                   </div>
                 </div>
 
-                {/* Decorative elements */}
-                <motion.div
-                  className={`absolute -bottom-20 -right-20 w-40 h-40 rounded-full bg-gradient-to-br ${project.gradient} opacity-10 blur-2xl`}
-                  animate={{
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
+                {/* Hover gradient effect */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${project.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none`} />
               </motion.div>
             </motion.div>
           ))}

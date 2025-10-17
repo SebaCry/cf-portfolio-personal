@@ -62,11 +62,11 @@ export default function Footer() {
             >
               <h3 className="text-2xl font-bold mb-4">
                 <span className="bg-gradient-to-r from-primary via-tertiary to-secondary bg-clip-text text-transparent">
-                  Portfolio
+                  Sebastian Pérez
                 </span>
               </h3>
               <p className="text-neutral-variant mb-6 leading-relaxed max-w-md">
-                Desarrollador Full Stack apasionado por crear experiencias web excepcionales.
+                Desarrollador AI-Full Stack apasionado por crear experiencias web excepcionales.
                 Transformando ideas en realidad digital.
               </p>
 

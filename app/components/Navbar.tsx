@@ -50,7 +50,7 @@ export default function Navbar() {
               className="text-2xl font-bold"
             >
               <span className="bg-gradient-to-r from-primary via-tertiary to-secondary bg-clip-text text-transparent">
-                Portfolio
+                Sebastian Pérez
               </span>
             </motion.a>
 

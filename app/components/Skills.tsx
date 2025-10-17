@@ -3,6 +3,7 @@
 import { motion, useInView } from 'framer-motion';
 import { Database, Globe, Layers, Terminal } from 'lucide-react';
 import { useRef } from 'react';
+import { TechIcons } from './TechIcons';
 
 const skillCategories = [
   {
@@ -10,10 +11,10 @@ const skillCategories = [
     title: 'Frontend',
     color: 'primary',
     skills: [
-      { name: 'React', level: 95 },
-      { name: 'Next.js', level: 90 },
-      { name: 'TypeScript', level: 88 },
-      { name: 'Tailwind CSS', level: 92 },
+      { name: 'React', level: 80 },
+      { name: 'Next.js', level: 80 },
+      { name: 'TypeScript', level: 90 },
+      { name: 'Tailwind CSS', level: 85 },
     ]
   },
   {
@@ -22,9 +23,9 @@ const skillCategories = [
     color: 'secondary',
     skills: [
       { name: 'Node.js', level: 85 },
-      { name: 'Python', level: 80 },
-      { name: 'API Design', level: 88 },
-      { name: 'GraphQL', level: 75 },
+      { name: 'Django', level: 95 },
+      { name: 'API Design', level: 80 },
+      { name: 'FastAPI', level: 90 },
     ]
   },
   {
@@ -33,9 +34,7 @@ const skillCategories = [
     color: 'tertiary',
     skills: [
       { name: 'PostgreSQL', level: 85 },
-      { name: 'MongoDB', level: 82 },
-      { name: 'Redis', level: 78 },
-      { name: 'Prisma', level: 88 },
+      { name: 'Supabase', level: 92 }
     ]
   },
   {
@@ -128,47 +127,61 @@ export default function Skills() {
 
                 {/* Skills List */}
                 <div className="space-y-4">
-                  {category.skills.map((skill, skillIndex) => (
-                    <motion.div
-                      key={skill.name}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={isInView ? { opacity: 1, x: 0 } : {}}
-                      transition={{ duration: 0.4, delay: categoryIndex * 0.1 + skillIndex * 0.05 }}
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-foreground font-medium">{skill.name}</span>
-                        <span className="text-neutral text-sm">{skill.level}%</span>
-                      </div>
+                  {category.skills.map((skill, skillIndex) => {
+                    const IconComponent = TechIcons[skill.name];
+                    return (
+                      <motion.div
+                        key={skill.name}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={isInView ? { opacity: 1, x: 0 } : {}}
+                        transition={{ duration: 0.4, delay: categoryIndex * 0.1 + skillIndex * 0.05 }}
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex items-center gap-3">
+                            {IconComponent && (
+                              <motion.div
+                                whileHover={{ scale: 1.1, rotate: 5 }}
+                                transition={{ duration: 0.2 }}
+                                className={`text-${category.color}`}
+                              >
+                                <IconComponent className="w-5 h-5" />
+                              </motion.div>
+                            )}
+                            <span className="text-foreground font-medium">{skill.name}</span>
+                          </div>
+                          <span className="text-neutral text-sm">{skill.level}%</span>
+                        </div>
 
-                      {/* Progress Bar */}
-                      <div className="h-2 bg-neutral/10 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={isInView ? { width: `${skill.level}%` } : {}}
-                          transition={{
-                            duration: 1,
-                            delay: categoryIndex * 0.1 + skillIndex * 0.05 + 0.3,
-                            ease: "easeOut"
-                          }}
-                          className={`h-full bg-gradient-to-r from-${category.color} to-${category.color}/60 rounded-full relative`}
-                        >
-                          {/* Shimmer effect */}
+                        {/* Progress Bar */}
+                        <div className="h-2 bg-neutral/10 rounded-full overflow-hidden">
                           <motion.div
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                            animate={{
-                              x: ['-100%', '100%']
-                            }}
+                            initial={{ width: 0 }}
+                            animate={isInView ? { width: `${skill.level}%` } : {}}
                             transition={{
-                              duration: 2,
-                              repeat: Infinity,
-                              repeatDelay: 1,
-                              ease: "easeInOut"
+                              duration: 1,
+                              delay: categoryIndex * 0.1 + skillIndex * 0.05 + 0.3,
+                              ease: "easeOut"
                             }}
-                          />
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                  ))}
+                            className={`h-full bg-gradient-to-r from-${category.color} to-${category.color}/60 rounded-full relative`}
+                          >
+                            {/* Shimmer effect */}
+                            <motion.div
+                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                              animate={{
+                                x: ['-100%', '100%']
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                repeatDelay: 1,
+                                ease: "easeInOut"
+                              }}
+                            />
+                          </motion.div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </motion.div>
             </motion.div>

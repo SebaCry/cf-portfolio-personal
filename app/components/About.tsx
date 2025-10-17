@@ -125,9 +125,9 @@ export default function About() {
           className="grid grid-cols-2 md:grid-cols-4 gap-8 p-8 rounded-2xl bg-gradient-to-br from-card-bg to-card-bg/50 border border-neutral/10"
         >
           {[
-            { value: '50+', label: 'Proyectos' },
-            { value: '3+', label: 'Años' },
-            { value: '30+', label: 'Clientes' },
+            { value: '3+', label: 'Proyectos' },
+            { value: '1+', label: 'Años' },
+            {value: '+5' ,label : "Lenguajes de programación"},
             { value: '99%', label: 'Satisfacción' },
           ].map((stat, index) => (
             <motion.div
