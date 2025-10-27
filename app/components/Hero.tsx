@@ -86,7 +86,7 @@ export default function Hero() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 className="flex items-center gap-3 text-xl sm:text-2xl lg:text-3xl text-neutral"
               >
-                <span>Desarrollador</span>
+                <span>Backend Developer</span>
                 <motion.span
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
