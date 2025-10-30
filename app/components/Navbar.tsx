@@ -3,6 +3,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ThemeToggle from './ThemeToggle';
 
 const navLinks = [
   { name: 'Inicio', href: '#hero' },
@@ -73,11 +74,19 @@ export default function Navbar() {
                 </motion.a>
               ))}
 
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                <ThemeToggle />
+              </motion.div>
+
               <motion.a
                 href="#contact"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium"
@@ -128,11 +137,20 @@ export default function Navbar() {
               {link.name}
             </motion.a>
           ))}
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={isMobileMenuOpen ? { opacity: 1, scale: 1 } : {}}
+            transition={{ duration: 0.3, delay: 0.5 }}
+          >
+            <ThemeToggle />
+          </motion.div>
+
           <motion.a
             href="#contact"
             initial={{ opacity: 0, scale: 0.5 }}
             animate={isMobileMenuOpen ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.3, delay: 0.5 }}
+            transition={{ duration: 0.3, delay: 0.6 }}
             onClick={() => setIsMobileMenuOpen(false)}
             className="px-8 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium text-lg"
           >
