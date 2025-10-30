@@ -1,14 +1,15 @@
 'use client';
 
 import { motion, useInView } from 'framer-motion';
-import { Mail, MapPin, Phone, Send } from 'lucide-react';
+import { Mail, MapPin, Phone, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { useRef, useState } from 'react';
+import emailjs from '@emailjs/browser'
 
 const contactInfo = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'Jspc513@email.com',
+    value: 'Jspc513@gmail.com',
     href: 'mailto:Jspc513@email.com',
     color: 'primary'
   },
@@ -30,15 +31,41 @@ const contactInfo = [
 
 export default function Contact() {
   const ref = useRef(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [formState, setFormState] = useState({
     name: '',
     email: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      const result = await emailjs.sendForm(
+        "service_jog6pxo",
+        "template_suijyms",
+        formRef.current!,
+        "gtoVHAzEdEhnJmmyC"
+      )
+
+      console.log("Mensaje enviado", result.text)
+      setSubmitStatus('success');
+      setFormState({ name: '', email: '', message: '' });
+
+    } catch (err) {
+      console.error("Error al enviar: ", err)
+      setSubmitStatus("error")
+    } finally {
+      setIsSubmitting(false)
+      setTimeout(() => setSubmitStatus(null), 500)
+    }
     // Handle form submission
     console.log('Form submitted:', formState);
   };
@@ -165,7 +192,7 @@ export default function Contact() {
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -177,6 +204,7 @@ export default function Contact() {
                 <input
                   type="text"
                   id="name"
+                  name='name'
                   value={formState.name}
                   onChange={(e) => setFormState({ ...formState, name: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl bg-card-bg border border-neutral/20 text-foreground placeholder:text-neutral focus:border-primary focus:outline-none transition-colors"
@@ -196,6 +224,7 @@ export default function Contact() {
                 <input
                   type="email"
                   id="email"
+                  name="email"
                   value={formState.email}
                   onChange={(e) => setFormState({ ...formState, email: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl bg-card-bg border border-neutral/20 text-foreground placeholder:text-neutral focus:border-primary focus:outline-none transition-colors"
@@ -214,6 +243,7 @@ export default function Contact() {
                 </label>
                 <textarea
                   id="message"
+                  name="message"
                   value={formState.message}
                   onChange={(e) => setFormState({ ...formState, message: e.target.value })}
                   rows={6}
@@ -222,6 +252,30 @@ export default function Contact() {
                   required
                 />
               </motion.div>
+
+              {submitStatus && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`p-4 rounded-xl flex items-center gap-3 ${
+                    submitStatus === 'success'
+                      ? 'bg-green-500/10 border border-green-500/30 text-green-600'
+                      : 'bg-red-500/10 border border-red-500/30 text-red-600'
+                  }`}
+                >
+                  {submitStatus === 'success' ? (
+                    <>
+                      <CheckCircle className="w-5 h-5" />
+                      <span>¡Mensaje enviado exitosamente! Te responderé pronto.</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-5 h-5" />
+                      <span>Hubo un error. Por favor intenta de nuevo.</span>
+                    </>
+                  )}
+                </motion.div>
+              )}
 
               <motion.button
                 type="submit"

@@ -30,22 +30,26 @@ const skillCategories = [
   },
   {
     icon: Database,
-    title: 'Database',
+    title: 'Database & Cloud',
     color: 'tertiary',
     skills: [
       { name: 'PostgreSQL', level: 85 },
-      { name: 'Supabase', level: 92 }
+      { name: 'MySQL', level: 85 },
+      { name: 'Supabase', level: 92 },
+      { name: 'Cloudflare', level: 80 }
     ]
   },
   {
     icon: Layers,
-    title: 'Tools & Others',
+    title: 'Tools & Workflow',
     color: 'secondary',
     skills: [
       { name: 'Git', level: 90 },
       { name: 'Docker', level: 80 },
       { name: 'AWS', level: 75 },
       { name: 'CI/CD', level: 82 },
+      { name: 'Jira', level: 85 },
+      { name: 'Scrum', level: 88 }
     ]
   },
 ];
