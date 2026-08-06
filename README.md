@@ -18,15 +18,48 @@ npm run deploy       # despliegue a Cloudflare
 
 Casi todo el contenido está separado de los componentes:
 
-| Qué                                              | Archivo                     |
-| ------------------------------------------------ | --------------------------- |
-| Dominio, nombre, correo, redes, descripción SEO   | `app/lib/site.ts`           |
-| Proyectos, experiencia laboral, habilidades       | `app/lib/data.ts`           |
-| Iconos de tecnologías                             | `app/components/TechIcons.tsx` |
-| Colores, animaciones, utilidades propias          | `app/globals.css`           |
+| Qué                                                     | Archivo                        |
+| ------------------------------------------------------- | ------------------------------ |
+| Dominio, nombre, correo, redes                           | `app/lib/site.ts`              |
+| **Todos los textos en español**                          | `app/lib/i18n/es.ts`           |
+| **Todos los textos en inglés**                           | `app/lib/i18n/en.ts`           |
+| Estructura de proyectos, experiencia y skills (sin texto) | `app/lib/data.ts`             |
+| Iconos de tecnologías                                    | `app/components/TechIcons.tsx` |
+| Colores, animaciones, utilidades propias                 | `app/globals.css`              |
 
 `SITE_URL` en `app/lib/site.ts` alimenta el canonical, el `sitemap.xml`, el `robots.txt`
 y el JSON-LD. Si cambias de dominio, es el único sitio donde hay que tocarlo.
+
+## Idiomas (i18n)
+
+| URL    | Idioma   | Ruta en el repo    |
+| ------ | -------- | ------------------ |
+| `/`    | Español  | `app/(es)/page.tsx`    |
+| `/en`  | Inglés   | `app/(en)/en/page.tsx` |
+
+Son URLs reales, no un interruptor de cliente: cada idioma tiene su `<html lang>`, su
+`<title>`, su canonical y su JSON-LD, y ambos declaran el mismo bloque de `hreflang`.
+Un toggle puramente en cliente haría que Google indexara un solo idioma.
+
+Cómo está montado y qué conviene no romper:
+
+- **Dos root layouts** vía route groups (`app/(es)` y `app/(en)`). Next sólo permite fijar
+  `<html lang>` desde un root layout, y hacen falta dos valores distintos. No existe
+  `app/layout.tsx`; el documento compartido está en `app/components/RootDocument.tsx`.
+- **`es.ts` es la fuente de verdad del tipo.** `en.ts` está declarado como `Dictionary`,
+  así que si añades una clave en español y se te olvida en inglés, **el build falla** en
+  lugar de renderizar un hueco.
+- **El diccionario no llega al navegador.** Todo se resuelve en componentes de servidor;
+  los chunks de cliente no contienen ni un texto de `es.ts`/`en.ts`.
+- **Los componentes de cliente reciben sólo strings**, nunca el diccionario entero: éste
+  contiene funciones (`videoLabel(title)`, `tagline(...)`) y las funciones no cruzan la
+  frontera RSC. Por eso `Navbar` recibe `t={dict.nav}` y `ProjectVideo` recibe etiquetas
+  ya resueltas.
+- **`app/lib/i18n/config.ts` no importa los diccionarios** a propósito: es lo que importan
+  los componentes de cliente para no arrastrar los dos idiomas al bundle.
+
+Para añadir un idioma: crea `app/lib/i18n/fr.ts` tipado como `Dictionary`, añádelo a
+`locales` y `dictionaries`, y crea `app/(fr)/fr/page.tsx` con su layout.
 
 ## Decisiones de rendimiento
 
