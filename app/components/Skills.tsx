@@ -1,221 +1,105 @@
-'use client';
-
-import { motion, useInView } from 'framer-motion';
 import { Database, Globe, Layers, Terminal } from 'lucide-react';
-import { useRef } from 'react';
+import { ACCENT, skillCategories } from '../lib/data';
+import type { Dictionary } from '../lib/i18n';
+import Reveal from './Reveal';
+import SectionHeading from './SectionHeading';
 import { TechIcons } from './TechIcons';
 
-const skillCategories = [
-  {
-    icon: Globe,
-    title: 'Frontend',
-    color: 'primary',
-    skills: [
-      { name: 'React', level: 80 },
-      { name: 'Next.js', level: 80 },
-      { name: 'TypeScript', level: 90 },
-      { name: 'Tailwind CSS', level: 85 },
-    ]
-  },
-  {
-    icon: Terminal,
-    title: 'Backend',
-    color: 'secondary',
-    skills: [
-      { name: 'Node.js', level: 85 },
-      { name: 'Django', level: 95 },
-      { name: 'API Design', level: 80 },
-      { name: 'FastAPI', level: 90 },
-    ]
-  },
-  {
-    icon: Database,
-    title: 'Database & Cloud',
-    color: 'tertiary',
-    skills: [
-      { name: 'PostgreSQL', level: 85 },
-      { name: 'MySQL', level: 85 },
-      { name: 'Supabase', level: 92 },
-      { name: 'Cloudflare', level: 80 }
-    ]
-  },
-  {
-    icon: Layers,
-    title: 'Tools & Workflow',
-    color: 'secondary',
-    skills: [
-      { name: 'Git', level: 90 },
-      { name: 'Docker', level: 80 },
-      { name: 'AWS', level: 75 },
-      { name: 'CI/CD', level: 82 },
-      { name: 'Jira', level: 85 },
-      { name: 'Scrum', level: 88 }
-    ]
-  },
-];
+const categoryIcons = {
+  globe: Globe,
+  terminal: Terminal,
+  database: Database,
+  layers: Layers,
+} as const;
 
-export default function Skills() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+export default function Skills({ dict }: { dict: Dictionary }) {
+  const t = dict.skills;
 
   return (
-    <section id="skills" ref={ref} className="py-32 px-6 sm:px-12 lg:px-16 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 -z-10">
-        <motion.div
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            x: [0, 50, 0],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
+    <section
+      id="skills"
+      className="section-defer relative overflow-hidden px-6 py-24 sm:px-12 lg:px-16 lg:py-32"
+    >
+      <div className="absolute inset-0 -z-10" aria-hidden="true">
+        <div className="orb orb--a top-1/4 left-1/4 h-96 w-96 bg-primary/5" />
       </div>
 
-      <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-20"
-        >
-          <motion.span
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.5 }}
-            className="inline-block px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-4"
-          >
-            Habilidades
-          </motion.span>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-foreground to-neutral bg-clip-text text-transparent">
-              Stack Tecnológico
-            </span>
-          </h2>
-          <p className="text-xl text-neutral-variant max-w-3xl mx-auto leading-relaxed">
-            Dominio de tecnologías modernas para construir aplicaciones robustas y escalables
-          </p>
-        </motion.div>
+      <div className="mx-auto max-w-7xl">
+        <SectionHeading eyebrow={t.eyebrow} title={t.title} description={t.description} />
 
-        {/* Skills Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {skillCategories.map((category, categoryIndex) => (
-            <motion.div
-              key={category.title}
-              initial={{ opacity: 0, x: categoryIndex % 2 === 0 ? -50 : 50 }}
-              animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.6, delay: categoryIndex * 0.1 }}
-            >
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="p-8 rounded-2xl bg-card-bg border border-neutral/10 hover:border-primary/30 transition-all"
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          {skillCategories.map((category, categoryIndex) => {
+            const tone = ACCENT[category.accent];
+            const CategoryIcon = categoryIcons[category.icon];
+
+            return (
+              <Reveal
+                key={category.id}
+                delay={categoryIndex * 90}
+                dir={categoryIndex % 2 === 0 ? 'left' : 'right'}
               >
-                {/* Category Header */}
-                <div className="flex items-center gap-4 mb-6">
-                  <motion.div
-                    whileHover={{ rotate: 360 }}
-                    transition={{ duration: 0.6 }}
-                    className={`p-3 rounded-xl bg-${category.color}/20 border border-${category.color}/30`}
-                  >
-                    <category.icon className={`w-6 h-6 text-${category.color}`} />
-                  </motion.div>
-                  <h3 className="text-2xl font-bold text-foreground">
-                    {category.title}
-                  </h3>
-                </div>
+                <article
+                  className={`h-full rounded-2xl border border-neutral/10 bg-card-bg p-6 transition-colors sm:p-8 ${tone.hoverBorder}`}
+                >
+                  <header className="mb-6 flex items-center gap-4">
+                    <span className={`rounded-xl border p-3 ${tone.bgStrong} ${tone.border}`}>
+                      <CategoryIcon className={`h-6 w-6 ${tone.text}`} aria-hidden="true" />
+                    </span>
+                    <h3 className="text-xl font-bold text-foreground sm:text-2xl">
+                      {t.categories[category.id]}
+                    </h3>
+                  </header>
 
-                {/* Skills List */}
-                <div className="space-y-4">
-                  {category.skills.map((skill, skillIndex) => {
-                    const IconComponent = TechIcons[skill.name];
-                    return (
-                      <motion.div
-                        key={skill.name}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={isInView ? { opacity: 1, x: 0 } : {}}
-                        transition={{ duration: 0.4, delay: categoryIndex * 0.1 + skillIndex * 0.05 }}
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <div className="flex items-center gap-3">
-                            {IconComponent && (
-                              <motion.div
-                                whileHover={{ scale: 1.1, rotate: 5 }}
-                                transition={{ duration: 0.2 }}
-                                className={`text-${category.color}`}
-                              >
-                                <IconComponent className="w-5 h-5" />
-                              </motion.div>
-                            )}
-                            <span className="text-foreground font-medium">{skill.name}</span>
+                  <ul className="space-y-4">
+                    {category.skills.map((skill, skillIndex) => {
+                      const SkillIcon = TechIcons[skill.name];
+
+                      return (
+                        <li key={skill.name}>
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="flex items-center gap-3">
+                              {SkillIcon && (
+                                <SkillIcon className={`h-5 w-5 shrink-0 ${tone.text}`} />
+                              )}
+                              <span className="font-medium text-foreground">{skill.name}</span>
+                            </span>
+                            <span className="text-sm text-neutral">{skill.level}%</span>
                           </div>
-                          <span className="text-neutral text-sm">{skill.level}%</span>
-                        </div>
 
-                        {/* Progress Bar */}
-                        <div className="h-2 bg-neutral/10 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={isInView ? { width: `${skill.level}%` } : {}}
-                            transition={{
-                              duration: 1,
-                              delay: categoryIndex * 0.1 + skillIndex * 0.05 + 0.3,
-                              ease: "easeOut"
-                            }}
-                            className={`h-full bg-gradient-to-r from-${category.color} to-${category.color}/60 rounded-full relative`}
+                          <div
+                            className="h-2 overflow-hidden rounded-full bg-neutral/10"
+                            role="meter"
+                            aria-valuenow={skill.level}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-label={t.meterLabel(skill.name)}
                           >
-                            {/* Shimmer effect */}
-                            <motion.div
-                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                              animate={{
-                                x: ['-100%', '100%']
-                              }}
-                              transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                                repeatDelay: 1,
-                                ease: "easeInOut"
-                              }}
+                            <div
+                              className={`skill-bar h-full w-full rounded-full ${tone.bar}`}
+                              style={
+                                {
+                                  '--level': skill.level / 100,
+                                  '--bar-delay': `${skillIndex * 70}ms`,
+                                } as React.CSSProperties
+                              }
                             />
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            </motion.div>
-          ))}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </article>
+              </Reveal>
+            );
+          })}
         </div>
 
-        {/* Additional Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-16 text-center"
-        >
-          <p className="text-neutral-variant mb-4">
-            Siempre aprendiendo y explorando nuevas tecnologías
-          </p>
-          <motion.div
-            animate={{
-              scale: [1, 1.1, 1],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="inline-block text-4xl"
-          >
+        <Reveal delay={200} className="mt-16 text-center">
+          <p className="text-neutral-variant">{t.footnote}</p>
+          <span className="anim-bob mt-4 inline-block text-4xl" aria-hidden="true">
             🚀
-          </motion.div>
-        </motion.div>
+          </span>
+        </Reveal>
       </div>
     </section>
   );

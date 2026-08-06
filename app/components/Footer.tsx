@@ -1,157 +1,100 @@
-'use client';
-
-import { motion } from 'framer-motion';
-import { Github, Heart, Linkedin, Mail, Twitter } from 'lucide-react';
+import { Github, Heart, Linkedin, Mail } from 'lucide-react';
+import type { Dictionary } from '../lib/i18n';
+import { AUTHOR } from '../lib/site';
+import Reveal from './Reveal';
 
 const socialLinks = [
-  { icon: Github, href: '#', label: 'GitHub' },
-  { icon: Linkedin, href: '#', label: 'LinkedIn' },
-  { icon: Twitter, href: '#', label: 'Twitter' },
-  { icon: Mail, href: '#', label: 'Email' },
+  { icon: Github, href: AUTHOR.github, label: 'GitHub' },
+  { icon: Linkedin, href: AUTHOR.linkedin, label: 'LinkedIn' },
+  { icon: Mail, href: `mailto:${AUTHOR.email}`, label: 'Email' },
 ];
 
-const footerLinks = [
-  {
-    title: 'Navegación',
-    links: [
-      { name: 'Inicio', href: '#hero' },
-      { name: 'Sobre Mí', href: '#about' },
-      { name: 'Proyectos', href: '#projects' },
-      { name: 'Contacto', href: '#contact' },
-    ],
-  },
-  {
-    title: 'Servicios',
-    links: [
-      { name: 'Desarrollo Web', href: '#' },
-      { name: 'Desarrollo Móvil', href: '#' },
-      { name: 'UI/UX Design', href: '#' },
-      { name: 'Consultoría', href: '#' },
-    ],
-  },
-];
+export default function Footer({ dict }: { dict: Dictionary }) {
+  const t = dict.footer;
+  const year = new Date().getFullYear();
 
-export default function Footer() {
+  const sections = [
+    {
+      title: t.navTitle,
+      links: [
+        { name: dict.nav.home, href: '#hero' },
+        { name: dict.nav.about, href: '#about' },
+        { name: dict.nav.experience, href: '#experience' },
+        { name: dict.nav.skills, href: '#skills' },
+        { name: dict.nav.projects, href: '#projects' },
+        { name: dict.nav.contact, href: '#contact' },
+      ],
+    },
+    { title: t.servicesTitle, links: t.services },
+  ];
+
   return (
-    <footer className="relative py-20 px-6 sm:px-12 lg:px-16 border-t border-neutral/10 overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 -z-10">
-        <motion.div
-          className="absolute bottom-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            x: [0, 50, 0],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
+    <footer className="relative overflow-hidden border-t border-neutral/10 px-6 py-16 sm:px-12 lg:px-16 lg:py-20">
+      <div className="absolute inset-0 -z-10" aria-hidden="true">
+        <div className="orb orb--a bottom-0 left-1/4 h-96 w-96 bg-primary/5" />
       </div>
 
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          {/* Brand Section */}
-          <div className="lg:col-span-2">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <h3 className="text-2xl font-bold mb-4">
-                <span className="bg-gradient-to-r from-primary via-tertiary to-secondary bg-clip-text text-transparent">
-                  Sebastian Pérez
-                </span>
-              </h3>
-              <p className="text-neutral-variant mb-6 leading-relaxed max-w-md">
-                Desarrollador AI-Full Stack apasionado por crear experiencias web excepcionales.
-                Transformando ideas en realidad digital.
-              </p>
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-12 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
+          <Reveal className="lg:col-span-2">
+            <p className="mb-4 text-2xl font-bold">
+              <span className="bg-gradient-to-r from-primary via-tertiary to-secondary bg-clip-text text-transparent">
+                {AUTHOR.name}
+              </span>
+            </p>
+            <p className="mb-6 max-w-md leading-relaxed text-neutral-variant">
+              {t.tagline(dict.meta.role, AUTHOR.locality)}
+            </p>
 
-              {/* Social Links */}
-              <div className="flex gap-4">
-                {socialLinks.map((social, index) => (
-                  <motion.a
-                    key={social.label}
-                    href={social.href}
-                    initial={{ opacity: 0, scale: 0 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    whileHover={{ scale: 1.2, rotate: 5 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="p-3 rounded-full bg-card-bg border border-neutral/20 hover:border-primary/50 hover:bg-primary/10 transition-all"
-                    aria-label={social.label}
+            <ul className="flex gap-4">
+              {socialLinks.map(({ icon: Icon, href, label }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    target={href.startsWith('mailto:') ? undefined : '_blank'}
+                    rel={href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
+                    className="group inline-flex rounded-full border border-neutral/20 bg-card-bg p-3 transition-colors hover:border-primary/50 hover:bg-primary/10"
+                    aria-label={label}
                   >
-                    <social.icon className="w-5 h-5 text-neutral hover:text-primary transition-colors" />
-                  </motion.a>
-                ))}
-              </div>
-            </motion.div>
-          </div>
+                    <Icon
+                      className="h-5 w-5 text-neutral transition-colors group-hover:text-primary"
+                      aria-hidden="true"
+                    />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
 
-          {/* Footer Links */}
-          {footerLinks.map((section, sectionIndex) => (
-            <motion.div
-              key={section.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 + sectionIndex * 0.1 }}
-            >
-              <h4 className="text-foreground font-bold mb-4">{section.title}</h4>
+          {sections.map((section, index) => (
+            <Reveal key={section.title} delay={100 + index * 80}>
+              <h2 className="mb-4 font-bold text-foreground">{section.title}</h2>
               <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.name}>
                     <a
                       href={link.href}
-                      className="text-neutral-variant hover:text-primary transition-colors inline-block hover:translate-x-1 duration-200"
+                      className="inline-block text-neutral-variant transition-[color,transform] duration-200 hover:translate-x-1 hover:text-primary"
                     >
                       {link.name}
                     </a>
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </Reveal>
           ))}
         </div>
 
-        {/* Bottom Bar */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="pt-8 border-t border-neutral/10 flex flex-col sm:flex-row justify-between items-center gap-4"
-        >
-          <p className="text-neutral-variant text-sm flex items-center gap-2">
-            © {new Date().getFullYear()} Portfolio. Hecho con
-            <motion.span
-              animate={{
-                scale: [1, 1.2, 1],
-              }}
-              transition={{
-                duration: 1,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            >
-              <Heart className="w-4 h-4 text-error fill-error" />
-            </motion.span>
-            y mucho café
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-neutral/10 pt-8 sm:flex-row">
+          <p className="flex items-center gap-2 text-sm text-neutral-variant">
+            © {year} {AUTHOR.name}. {t.madeWithPre}
+            <Heart className="h-4 w-4 fill-error text-error" aria-hidden="true" />
+            <span className="sr-only">{t.love}</span>
+            {t.madeWithPost}
           </p>
 
-          <div className="flex gap-6 text-sm">
-            <a href="#" className="text-neutral-variant hover:text-primary transition-colors">
-              Política de Privacidad
-            </a>
-            <a href="#" className="text-neutral-variant hover:text-primary transition-colors">
-              Términos de Uso
-            </a>
-          </div>
-        </motion.div>
+          <p className="text-sm text-neutral-variant">{t.builtWith}</p>
+        </div>
       </div>
     </footer>
   );

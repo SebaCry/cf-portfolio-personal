@@ -1,72 +1,59 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-export default function ThemeToggle() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const [mounted, setMounted] = useState(false);
+type Theme = 'light' | 'dark';
+
+export default function ThemeToggle({ toLight, toDark }: { toLight: string; toDark: string }) {
+  const [theme, setTheme] = useState<Theme | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    // Leer el tema guardado en localStorage
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-    setTheme(initialTheme);
-
-    if (initialTheme === 'light') {
-      document.documentElement.classList.add('light');
-    } else {
-      document.documentElement.classList.remove('light');
-    }
+    // El script bloqueante de RootDocument ya puso la clase antes del primer
+    // pintado; aquí sólo sincronizamos el estado de React con el DOM.
+    setTheme(document.documentElement.classList.contains('light') ? 'light' : 'dark');
   }, []);
 
   const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-
-    if (newTheme === 'light') {
-      document.documentElement.classList.add('light');
-    } else {
-      document.documentElement.classList.remove('light');
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.classList.toggle('light', next === 'light');
+    try {
+      localStorage.setItem('theme', next);
+    } catch {
+      // Modo privado o almacenamiento bloqueado: el tema sigue funcionando,
+      // sólo no se recuerda entre visitas.
     }
   };
 
-  if (!mounted) {
-    return (
-      <div className="w-14 h-7 rounded-full bg-neutral/20" />
-    );
-  }
+  const isDark = theme !== 'light';
 
   return (
-    <motion.button
+    <button
+      type="button"
       onClick={toggleTheme}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className="relative w-14 h-7 rounded-full bg-neutral/20 border border-neutral/30 hover:border-primary/50 transition-colors"
-      aria-label="Toggle theme"
+      disabled={theme === null}
+      className="relative h-7 w-14 shrink-0 rounded-full border border-neutral/30 bg-neutral/20 transition-colors hover:border-primary/50 disabled:cursor-default"
+      aria-label={isDark ? toLight : toDark}
+      aria-pressed={!isDark}
     >
-      <motion.div
-        className="absolute top-1 left-1 w-5 h-5 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg"
-        animate={{
-          x: theme === 'dark' ? 0 : 24
-        }}
-        transition={{
-          type: 'spring',
-          stiffness: 500,
-          damping: 30
-        }}
+      <span
+        className="absolute top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary shadow-lg transition-transform duration-300 ease-out"
+        style={{ transform: isDark ? 'translateX(0)' : 'translateX(24px)' }}
       >
-        {theme === 'dark' ? (
-          <Moon className="w-3 h-3 text-white" />
-        ) : (
-          <Sun className="w-3 h-3 text-white" />
-        )}
-      </motion.div>
-    </motion.button>
+        {/* Ambos iconos van montados y sólo se alterna la opacidad: evita
+            que el primer clic tenga que crear un nodo nuevo. */}
+        <Moon
+          className="absolute h-3 w-3 text-white transition-opacity"
+          style={{ opacity: isDark ? 1 : 0 }}
+          aria-hidden="true"
+        />
+        <Sun
+          className="absolute h-3 w-3 text-white transition-opacity"
+          style={{ opacity: isDark ? 0 : 1 }}
+          aria-hidden="true"
+        />
+      </span>
+    </button>
   );
 }
