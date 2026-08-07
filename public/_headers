@@ -1,0 +1,21 @@
+# Cabeceras para los ficheros estáticos en Cloudflare Workers.
+#
+# Por qué aquí y no en next.config.ts: en Cloudflare los assets los sirve el
+# binding ASSETS, que responde ANTES de llegar al worker de Next. La función
+# headers() de next.config.ts nunca se ejecuta para estas rutas, así que las
+# reglas tienen que vivir en este fichero.
+#
+# Workers Assets no publica _headers: es configuración, no un fichero del sitio.
+
+# Chunks de Next: el nombre lleva un hash del contenido, así que cuando cambia
+# el código cambia la URL. Se pueden cachear indefinidamente sin riesgo.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Imágenes y vídeo: sólo cambian cuando los reemplazas a mano. Si subes una
+# versión nueva con el mismo nombre, renómbrala o purga la caché.
+/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

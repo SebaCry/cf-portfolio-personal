@@ -13,21 +13,9 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
 
-  async headers() {
-    return [
-      {
-        // Estos assets sólo cambian cuando los reemplazas a mano, así que
-        // cachearlos un año evita volver a descargar megas en cada visita.
-        source: '/:folder(assets|images)/:file*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-    ];
-  },
+  // Las cabeceras de caché de los estáticos NO van aquí: en Cloudflare los
+  // sirve el binding ASSETS sin pasar por el worker de Next, así que headers()
+  // no llegaría a ejecutarse. Están en `public/_headers`.
 };
 
 export default nextConfig;

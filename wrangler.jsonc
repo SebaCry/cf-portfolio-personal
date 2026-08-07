@@ -3,11 +3,28 @@
   "main": ".open-next/worker.js",
   "name": "my-app",
   "compatibility_date": "2025-03-25",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
+  },
+
+  // Dominio propio. Al desplegar, wrangler crea el registro DNS y el enlace
+  // del custom domain en la zona sebacry.me.
+  //
+  // Sólo el dominio raíz, a propósito: si www también sirviera el sitio,
+  // habría dos URLs con el mismo contenido. Para www lo correcto es una
+  // Redirect Rule 301 hacia el raíz desde el panel de Cloudflare.
+  "routes": [
+    {
+      "pattern": "sebacry.me",
+      "custom_domain": true
+    }
+  ],
+
+  // Logs en el panel de Cloudflare (Workers > my-app > Logs). Sin esto, un
+  // error en producción no deja rastro en ningún sitio.
+  "observability": {
+    "enabled": true
   }
 }

@@ -11,8 +11,45 @@ npm run dev          # http://localhost:3000
 npm run build        # build de producción
 npm run lint
 npm run preview      # build de OpenNext + previsualización en el runtime de Workers
-npm run deploy       # despliegue a Cloudflare
 ```
+
+## Despliegue
+
+**Un `git push` NO despliega nada.** El repo no tiene CI: la publicación es manual.
+
+```bash
+npx wrangler login   # sólo la primera vez (abre el navegador)
+npm run deploy       # build de OpenNext + subida a Cloudflare
+```
+
+El sitio queda en <https://sebacry.me> (el custom domain está declarado en
+`wrangler.jsonc`; wrangler crea el registro DNS en el primer despliegue).
+
+Antes de publicar conviene probarlo en el runtime real, que **no** es lo mismo que
+`npm run dev`:
+
+```bash
+npm run preview      # levanta el worker en workerd, igual que en producción
+```
+
+Muchos fallos de Cloudflare (APIs de Node que no existen, `require` dinámicos, tamaño
+del bundle) sólo aparecen ahí.
+
+### Dos trampas que ya costaron un despliegue roto
+
+1. **No uses `--turbopack` en el script `build`.** Turbopack genera chunks que se cargan
+   con `require()` dinámico y el runtime de Workers no lo permite: el worker compila sin
+   quejarse y luego devuelve **500 en todas las rutas**. En `dev` sí puede usarse.
+2. **Las cabeceras de caché van en `public/_headers`, no en `next.config.ts`.** En
+   Cloudflare los ficheros estáticos los sirve el binding `ASSETS`, que responde antes de
+   llegar al worker de Next, así que `headers()` nunca se ejecuta para esas rutas.
+
+### www
+
+`wrangler.jsonc` sólo declara el dominio raíz. Si quieres que `www.sebacry.me` funcione,
+crea una **Redirect Rule** 301 hacia `sebacry.me` en el panel de Cloudflare (Rules >
+Redirect Rules). Añadirlo como segundo custom domain haría que dos URLs sirvieran el
+mismo contenido.
 
 ## Dónde editar el contenido
 
@@ -82,6 +119,9 @@ Estas son deliberadas; conviene no revertirlas sin medir:
   móvil o con ahorro de datos sólo al pulsar play.
 - **Fuentes vía `next/font`**, servidas desde el propio dominio. El `@import` de Google
   Fonts encadenaba CSS → CSS → fuentes antes de poder pintar texto.
+- **`public/_headers`** marca `/_next/static/*`, `/images/*` y `/assets/*` como
+  `immutable` durante un año. Sin él, Cloudflare los sirve con
+  `max-age=0, must-revalidate` y el navegador revalida en cada visita.
 - **Tema sin destello**: un script bloqueante en `<head>` (`app/layout.tsx`) aplica la
   clase `light` antes del primer pintado.
 
