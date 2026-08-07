@@ -35,7 +35,7 @@ npm run preview      # levanta el worker en workerd, igual que en producción
 Muchos fallos de Cloudflare (APIs de Node que no existen, `require` dinámicos, tamaño
 del bundle) sólo aparecen ahí.
 
-### Dos trampas que ya costaron un despliegue roto
+### Tres trampas que ya costaron un despliegue roto
 
 1. **No uses `--turbopack` en el script `build`.** Turbopack genera chunks que se cargan
    con `require()` dinámico y el runtime de Workers no lo permite: el worker compila sin
@@ -43,6 +43,13 @@ del bundle) sólo aparecen ahí.
 2. **Las cabeceras de caché van en `public/_headers`, no en `next.config.ts`.** En
    Cloudflare los ficheros estáticos los sirve el binding `ASSETS`, que responde antes de
    llegar al worker de Next, así que `headers()` nunca se ejecuta para esas rutas.
+3. **Los scripts usan `wrangler deploy` / `wrangler dev`, no `opennextjs-cloudflare
+   deploy` / `preview`.** En Windows esos dos comandos de OpenNext fallan con
+   `ERR_UNSUPPORTED_ESM_URL_SCHEME`: pasan una ruta `c:\...` a un `import()` dinámico,
+   que en ESM exige formato `file://`. Llamar a wrangler directamente es equivalente
+   mientras `open-next.config.ts` no configure caché incremental (si algún día añades
+   R2/KV como incremental cache, `opennextjs-cloudflare deploy` sí haría falta para
+   poblarla, y entonces conviene usar WSL o actualizar la librería).
 
 ### www
 
