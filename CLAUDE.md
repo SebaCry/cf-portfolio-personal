@@ -12,9 +12,10 @@ npm run build     # next build (plain Next build, typecheck + content asserts)
 npm run preview   # OpenNext build + wrangler dev: the real workerd runtime (http://localhost:8787)
 npm run deploy    # OpenNext build + wrangler deploy (manual; no CI, git push deploys nothing)
 npx eslint app    # lint source
+npm test          # tests/content.test.mjs (node:test, no deps); CHECK_LINKS=1 hits the network, CV_JSON=<path> compares with Sebas's JSON
 ```
 
-- There are no tests. Verify with `npm run build`, and with `npm run preview` for anything that touches runtime behavior: many Workers failures (missing Node APIs, dynamic `require`, bundle size) only appear there.
+- `npm test` imports the real `.ts` modules (Node type stripping + a resolve hook for extensionless imports). Sebas's JSON is never committed: it has third-party phones. Also verify with `npm run build`, and with `npm run preview` for anything that touches runtime behavior: many Workers failures (missing Node APIs, dynamic `require`, bundle size) only appear there.
 - `npm run lint` (bare `eslint`) also lints `.open-next/` and `.wrangler/` build output and reports thousands of bogus problems. Lint `app` instead.
 
 ## Deployment traps (each one already broke a deploy)
