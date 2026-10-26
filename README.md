@@ -8,10 +8,53 @@ Portafolio personal en Next.js 15 (App Router), desplegado en Cloudflare Workers
 ```bash
 npm install
 npm run dev          # http://localhost:3000
-npm run build        # build de producción
-npm run lint
-npm run preview      # build de OpenNext + previsualización en el runtime de Workers
+npm run build        # build de producción (typecheck + validación del contenido)
+npx eslint app       # lint del código fuente
+npm run preview      # build de OpenNext + previsualización en el runtime de Workers (:8787)
 ```
+
+`npm run lint` (eslint sin ruta) también revisa `.open-next/` y `.wrangler/` y saca miles
+de falsos errores: usa `npx eslint app`.
+
+## Dónde editar el contenido
+
+**Todo el contenido está en un solo archivo: `app/lib/content/portfolio.ts`**, en los dos
+idiomas. Sale del JSON de Sebas y es la única fuente de verdad: no se añade ningún dato que
+no esté ahí (nada de cifras inventadas ni porcentajes de habilidades).
+
+| Qué                                                            | Archivo                         |
+| -------------------------------------------------------------- | ------------------------------- |
+| Perfil, contacto, experiencia, proyectos, sitios web, formación, habilidades e idiomas | `app/lib/content/portfolio.ts` |
+| Forma del contenido (tipos)                                    | `app/lib/content/schema.ts`     |
+| Validaciones que tumban el build                               | `app/lib/content/index.ts`      |
+| Texto de interfaz (menú, botones, etiquetas) en español        | `app/lib/i18n/es.ts`            |
+| Texto de interfaz en inglés                                    | `app/lib/i18n/en.ts`            |
+| Dominio, retrato/imagen OG y orden de las secciones (`SECTIONS`) | `app/lib/site.ts`             |
+| Colores, botones y utilidades propias                          | `app/globals.css`               |
+
+Cómo se edita:
+
+- Un texto traducible es `{ es: '…', en: '…' }`. Los nombres propios que no cambian entre
+  idiomas pueden ser un string normal.
+- Los periodos son `'2024'` (solo año) o `'2026-02'` (año-mes); `end: null` significa
+  "Actualidad". El texto ("Ago 2026 – Actualidad") se genera solo.
+- Las URLs van con `https://` y en ASCII: las tildes se codifican (`á` → `%C3%A1`).
+- Nunca enlaces un repo privado: da 404 a cualquier visitante.
+- Dos proyectos con el mismo código se enlazan con `sameCodeAs` (en los dos sentidos).
+
+Si algo no cuadra, **`npm run build` falla** y lista todos los problemas a la vez:
+
+- Los tipos (`satisfies Portfolio`) detectan campos que faltan o sobran y traducciones
+  que faltan.
+- Los asserts de `index.ts` detectan periodos mal escritos o al revés, URLs no https o
+  con tildes sin codificar, ids repetidos, `sameCodeAs` no recíproco, textos vacíos y
+  una `metaDescription` de más de 160 caracteres.
+
+Privacidad: solo se publica el primer teléfono, y no va en el JSON-LD. Las referencias
+(teléfonos de terceros) no se publican; la página dice que están disponibles a solicitud.
+
+`SITE_URL` en `app/lib/site.ts` alimenta el canonical, el `sitemap.xml`, el `robots.txt`
+y el JSON-LD. Si cambias de dominio, es el único sitio donde hay que tocarlo.
 
 ## Despliegue
 
@@ -35,7 +78,7 @@ npm run preview      # levanta el worker en workerd, igual que en producción
 Muchos fallos de Cloudflare (APIs de Node que no existen, `require` dinámicos, tamaño
 del bundle) sólo aparecen ahí.
 
-### Tres trampas que ya costaron un despliegue roto
+### Trampas que ya costaron un despliegue roto
 
 1. **No uses `--turbopack` en el script `build`.** Turbopack genera chunks que se cargan
    con `require()` dinámico y el runtime de Workers no lo permite: el worker compila sin
@@ -47,9 +90,12 @@ del bundle) sólo aparecen ahí.
    deploy` / `preview`.** En Windows esos dos comandos de OpenNext fallan con
    `ERR_UNSUPPORTED_ESM_URL_SCHEME`: pasan una ruta `c:\...` a un `import()` dinámico,
    que en ESM exige formato `file://`. Llamar a wrangler directamente es equivalente
-   mientras `open-next.config.ts` no configure caché incremental (si algún día añades
-   R2/KV como incremental cache, `opennextjs-cloudflare deploy` sí haría falta para
-   poblarla, y entonces conviene usar WSL o actualizar la librería).
+   mientras `open-next.config.ts` no configure caché incremental.
+4. **Nada de `fs` ni APIs exclusivas de Node** en módulos que acaban en el Worker
+   (incluido `app/lib/content/`): `fs` no existe en workerd.
+5. **`next/image`**: solo lo usa el retrato del Hero y está comprobado en `npm run
+   preview`. Cualquier imagen nueva con `next/image` hay que verificarla ahí antes de
+   desplegar.
 
 ### www
 
@@ -58,93 +104,54 @@ crea una **Redirect Rule** 301 hacia `sebacry.me` en el panel de Cloudflare (Rul
 Redirect Rules). Añadirlo como segundo custom domain haría que dos URLs sirvieran el
 mismo contenido.
 
-## Dónde editar el contenido
-
-Casi todo el contenido está separado de los componentes:
-
-| Qué                                                     | Archivo                        |
-| ------------------------------------------------------- | ------------------------------ |
-| Dominio, nombre, correo, redes                           | `app/lib/site.ts`              |
-| **Todos los textos en español**                          | `app/lib/i18n/es.ts`           |
-| **Todos los textos en inglés**                           | `app/lib/i18n/en.ts`           |
-| Estructura de proyectos, experiencia y skills (sin texto) | `app/lib/data.ts`             |
-| Iconos de tecnologías                                    | `app/components/TechIcons.tsx` |
-| Colores, animaciones, utilidades propias                 | `app/globals.css`              |
-
-`SITE_URL` en `app/lib/site.ts` alimenta el canonical, el `sitemap.xml`, el `robots.txt`
-y el JSON-LD. Si cambias de dominio, es el único sitio donde hay que tocarlo.
-
 ## Idiomas (i18n)
 
-| URL    | Idioma   | Ruta en el repo    |
-| ------ | -------- | ------------------ |
+| URL    | Idioma   | Ruta en el repo        |
+| ------ | -------- | ---------------------- |
 | `/`    | Español  | `app/(es)/page.tsx`    |
 | `/en`  | Inglés   | `app/(en)/en/page.tsx` |
 
 Son URLs reales, no un interruptor de cliente: cada idioma tiene su `<html lang>`, su
 `<title>`, su canonical y su JSON-LD, y ambos declaran el mismo bloque de `hreflang`.
-Un toggle puramente en cliente haría que Google indexara un solo idioma.
-
-Cómo está montado y qué conviene no romper:
 
 - **Dos root layouts** vía route groups (`app/(es)` y `app/(en)`). Next sólo permite fijar
-  `<html lang>` desde un root layout, y hacen falta dos valores distintos. No existe
-  `app/layout.tsx`; el documento compartido está en `app/components/RootDocument.tsx`.
-- **`es.ts` es la fuente de verdad del tipo.** `en.ts` está declarado como `Dictionary`,
-  así que si añades una clave en español y se te olvida en inglés, **el build falla** en
-  lugar de renderizar un hueco.
-- **El diccionario no llega al navegador.** Todo se resuelve en componentes de servidor;
-  los chunks de cliente no contienen ni un texto de `es.ts`/`en.ts`.
-- **Los componentes de cliente reciben sólo strings**, nunca el diccionario entero: éste
-  contiene funciones (`videoLabel(title)`, `tagline(...)`) y las funciones no cruzan la
-  frontera RSC. Por eso `Navbar` recibe `t={dict.nav}` y `ProjectVideo` recibe etiquetas
-  ya resueltas.
-- **`app/lib/i18n/config.ts` no importa los diccionarios** a propósito: es lo que importan
-  los componentes de cliente para no arrastrar los dos idiomas al bundle.
+  `<html lang>` desde un root layout. No existe `app/layout.tsx`; el documento compartido
+  (fuentes, script de tema, JSON-LD) está en `app/components/RootDocument.tsx`.
+- **`es.ts` es la fuente de verdad del tipo `Dictionary`.** Si añades una clave en español
+  y se te olvida en inglés, el build falla.
+- **El contenido y los diccionarios no llegan al navegador.** Todo se resuelve en
+  componentes de servidor; los componentes de cliente reciben sólo strings.
+- **`app/lib/i18n/config.ts` y `app/lib/site.ts` no importan contenido** a propósito: los
+  importan componentes de cliente.
 
 Para añadir un idioma: crea `app/lib/i18n/fr.ts` tipado como `Dictionary`, añádelo a
-`locales` y `dictionaries`, y crea `app/(fr)/fr/page.tsx` con su layout.
+`locales` y `dictionaries`, traduce cada `{ es, en }` de `portfolio.ts` (el build falla
+hasta que lo hagas) y crea `app/(fr)/fr/page.tsx` con su layout.
 
-## Decisiones de rendimiento
+## Decisiones de diseño y rendimiento
 
-Estas son deliberadas; conviene no revertirlas sin medir:
+Deliberadas; conviene no revertirlas sin medir:
 
-- **Sin librería de animación.** Las entradas del Hero son `@keyframes` de CSS y las
-  revelaciones al hacer scroll usan `app/components/Reveal.tsx`, que comparte un único
-  `IntersectionObserver` entre todas las instancias. Antes cada sección era un componente
-  cliente con `framer-motion` y el contenido nacía en `opacity: 0`, así que no se veía
-  nada hasta que hidrataba React.
-- **Componentes de servidor por defecto.** Sólo son `'use client'` los que realmente
-  necesitan estado: `Navbar`, `ThemeToggle`, `Reveal`, `ProjectVideo` y `ContactForm`.
-- **`content-visibility: auto`** en las secciones (`.section-defer`): el navegador no
-  calcula layout ni pinta lo que está fuera de pantalla.
-- **Orbes decorativos**: se anima sólo `transform` con `will-change`, para que la capa
-  desenfocada se rasterice una vez y no en cada frame.
-- **Barras de habilidades**: se anima `transform: scaleX()`, no `width` (que fuerza
-  recálculo de layout en cada frame).
-- **Vídeo de demo**: no se descarga hasta que la tarjeta se acerca al viewport, y en
-  móvil o con ahorro de datos sólo al pulsar play.
-- **Fuentes vía `next/font`**, servidas desde el propio dominio. El `@import` de Google
-  Fonts encadenaba CSS → CSS → fuentes antes de poder pintar texto.
-- **`public/_headers`** marca `/_next/static/*`, `/images/*` y `/assets/*` como
-  `immutable` durante un año. Sin él, Cloudflare los sirve con
-  `max-age=0, must-revalidate` y el navegador revalida en cada visita.
-- **Tema sin destello**: un script bloqueante en `<head>` (`app/layout.tsx`) aplica la
+- **Un solo acento de color y contraste AA** en los dos temas (ratios anotados al principio
+  de `globals.css`). El texto sobre `bg-primary` usa siempre `text-on-primary`.
+- **Sin librería de animación ni revelados al hacer scroll.** La única animación es la
+  entrada del Hero (`@keyframes`), y `prefers-reduced-motion` la desactiva.
+- **Componentes de servidor por defecto.** Sólo son `'use client'` `Navbar`,
+  `ThemeToggle`, `LanguageToggle`, `ProjectVideo` y `ContactForm`.
+- **`content-visibility: auto`** en las secciones (`.section-defer`). Crea un bloque
+  contenedor para `position: fixed`, por eso el modal del vídeo va en un portal a `<body>`.
+- **Vídeo de demo de SEBSBOT** remoto: no se descarga hasta que la tarjeta se acerca al
+  viewport, y en móvil o con ahorro de datos sólo al pulsar play.
+- **Menú móvil accesible**: al abrirlo, `main` y `footer` quedan `inert`, el foco va al
+  primer enlace y Escape lo devuelve al botón.
+- **Fuentes vía `next/font`**, servidas desde el propio dominio.
+- **`public/_headers`** marca `/_next/static/*` e `/images/*` como `immutable` durante un
+  año.
+- **Tema sin destello**: un script bloqueante en `<head>` (`RootDocument.tsx`) aplica la
   clase `light` antes del primer pintado.
 
 ## Pendiente
 
-- `public/assets/sieki-demo.mp4` pesa ~11 MB. Comprimirlo mejora bastante la sección de
-  proyectos:
-
-  ```bash
-  ffmpeg -i public/assets/sieki-demo.mp4 -vf "scale=1280:-2" \
-    -c:v libx264 -crf 28 -preset slow -an -movflags +faststart \
-    public/assets/sieki-demo.min.mp4
-  ```
-
-  Después, actualizar `videoUrl` en `app/lib/data.ts`.
-
 - La imagen de Open Graph es la foto de perfil (400×400). Para una tarjeta social más
-  vistosa, añadir `public/og.png` de 1200×630 y apuntar `OG_IMAGE` en `app/layout.tsx`
-  a ese archivo, cambiando `twitter.card` a `summary_large_image`.
+  vistosa, añadir `public/og.png` de 1200×630, apuntar `OG_IMAGE` en `app/lib/site.ts` a
+  ese archivo y cambiar `twitter.card` a `summary_large_image` en `app/lib/metadata.ts`.
