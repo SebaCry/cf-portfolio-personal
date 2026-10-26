@@ -18,6 +18,10 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Salida de `npm run preview`/`deploy` y worktrees de agentes.
+      ".open-next/**",
+      ".wrangler/**",
+      ".claude/**",
     ],
   },
 ];

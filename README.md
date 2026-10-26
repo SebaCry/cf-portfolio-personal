@@ -10,6 +10,7 @@ npm install
 npm run dev          # http://localhost:3000
 npm run build        # build de producción
 npm run lint
+npm test             # comprueba que el lint ignora .open-next/, .wrangler/ y .claude/
 npm run preview      # build de OpenNext + previsualización en el runtime de Workers
 ```
 
@@ -129,7 +130,7 @@ Estas son deliberadas; conviene no revertirlas sin medir:
 - **`public/_headers`** marca `/_next/static/*`, `/images/*` y `/assets/*` como
   `immutable` durante un año. Sin él, Cloudflare los sirve con
   `max-age=0, must-revalidate` y el navegador revalida en cada visita.
-- **Tema sin destello**: un script bloqueante en `<head>` (`app/layout.tsx`) aplica la
+- **Tema sin destello**: un script bloqueante en `<head>` (`app/components/RootDocument.tsx`) aplica la
   clase `light` antes del primer pintado.
 
 ## Pendiente
@@ -146,5 +147,5 @@ Estas son deliberadas; conviene no revertirlas sin medir:
   Después, actualizar `videoUrl` en `app/lib/data.ts`.
 
 - La imagen de Open Graph es la foto de perfil (400×400). Para una tarjeta social más
-  vistosa, añadir `public/og.png` de 1200×630 y apuntar `OG_IMAGE` en `app/layout.tsx`
-  a ese archivo, cambiando `twitter.card` a `summary_large_image`.
+  vistosa, añadir `public/og.png` de 1200×630 y apuntar `OG_IMAGE` en `app/lib/site.ts`
+  a ese archivo, cambiando `twitter.card` a `summary_large_image` en `app/lib/metadata.ts`.
