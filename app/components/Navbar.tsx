@@ -100,11 +100,12 @@ export default function Navbar({ t, locale, name }: NavbarProps) {
       >
         <nav aria-label={t.mainNav} className="mx-auto max-w-6xl px-6 sm:px-10">
           <div className="flex h-16 items-center justify-between gap-6">
-            <a href="#hero" className="font-semibold tracking-tight text-foreground">
+            <a href="#hero" className="font-semibold tracking-tight whitespace-nowrap text-foreground">
               {name}
             </a>
 
-            <div className="hidden items-center gap-6 xl:flex">
+            {/* gap-5 y nowrap: con gap-6 la fila no cabe en 1072px y "Sobre mí" se parte en dos líneas. */}
+            <div className="hidden items-center gap-5 whitespace-nowrap xl:flex">
               {SECTIONS.map((section) => (
                 <a
                   key={section.id}
