@@ -28,7 +28,7 @@ export default function LanguageToggle({
           <span
             key={code}
             aria-current="true"
-            className="rounded-full bg-primary px-2.5 py-1 text-white"
+            className="rounded-full bg-primary px-2.5 py-1 text-on-primary"
           >
             {LABEL[code]}
             <span className="sr-only"> — {FULL_NAME[code]}</span>

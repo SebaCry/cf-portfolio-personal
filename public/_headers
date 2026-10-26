@@ -12,10 +12,8 @@
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Imágenes y vídeo: sólo cambian cuando los reemplazas a mano. Si subes una
+# Imágenes: sólo cambian cuando los reemplazas a mano. Si subes una
 # versión nueva con el mismo nombre, renómbrala o purga la caché.
 /images/*
   Cache-Control: public, max-age=31536000, immutable
 
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable

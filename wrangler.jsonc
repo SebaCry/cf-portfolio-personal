@@ -10,14 +10,15 @@
   },
 
   // Dominio propio. Al desplegar, wrangler crea el registro DNS y el enlace
-  // del custom domain en la zona sebacry.me.
+  // del custom domain en la zona sebasperez.cc (el subdominio sebsbot.sebasperez.cc
+  // es el panel de SEBSBOT: no lo toques desde aquí).
   //
   // Sólo el dominio raíz, a propósito: si www también sirviera el sitio,
   // habría dos URLs con el mismo contenido. Para www lo correcto es una
   // Redirect Rule 301 hacia el raíz desde el panel de Cloudflare.
   "routes": [
     {
-      "pattern": "sebacry.me",
+      "pattern": "sebasperez.cc",
       "custom_domain": true
     }
   ],

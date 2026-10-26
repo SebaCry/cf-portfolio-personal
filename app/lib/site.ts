@@ -1,39 +1,28 @@
+import type { Dictionary } from './i18n/es';
+
 /**
- * Datos del sitio que no dependen del idioma.
- * Los textos traducibles (rol, descripción, keywords) están en
- * `app/lib/i18n/es.ts` y `app/lib/i18n/en.ts`.
+ * Datos del sitio que no son contenido. El contenido (perfil, contacto,
+ * proyectos…) está en `app/lib/content/portfolio.ts`.
+ *
+ * Este archivo lo importa `Navbar` (cliente): no importes aquí `content`, o
+ * los dos idiomas del portafolio acabarían en el bundle del navegador.
  */
-export const SITE_URL = 'https://sebacry.me';
+export const SITE_URL = 'https://sebasperez.cc';
 
-export const AUTHOR = {
-  name: 'Sebastián Pérez',
-  email: 'jspc513@gmail.com',
-  phone: '+57 315 277 3333',
-  phoneHref: 'tel:+573152773333',
-  locality: 'Ibagué',
-  region: 'Tolima',
-  country: 'CO',
-  github: 'https://github.com/SebaCry',
-  linkedin: 'https://www.linkedin.com/in/sebastián-perez',
-} as const;
-
-export const SOCIAL_PROFILES = [AUTHOR.github, AUTHOR.linkedin];
-
+/** Retrato del Hero y tarjeta de Open Graph. */
 export const OG_IMAGE = {
   url: '/images/image.png',
   width: 400,
   height: 400,
 };
 
-/** Temas sobre los que trabaja; se usa en `knowsAbout` del JSON-LD. */
-export const KNOWS_ABOUT = [
-  'Full stack web development',
-  'Next.js',
-  'React',
-  'Astro',
-  'Django',
-  'TypeScript',
-  'Cloudflare Workers',
-  'WordPress',
-  'PostgreSQL',
-];
+/** Secciones de la página, en orden. Las comparten Navbar y Footer. */
+export const SECTIONS = [
+  { id: 'about', label: 'about' },
+  { id: 'experience', label: 'experience' },
+  { id: 'projects', label: 'projects' },
+  { id: 'websites', label: 'websites' },
+  { id: 'skills', label: 'skills' },
+  { id: 'education', label: 'education' },
+  { id: 'contact', label: 'contact' },
+] as const satisfies readonly { id: string; label: keyof Dictionary['nav'] }[];
