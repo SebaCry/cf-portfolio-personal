@@ -1,12 +1,16 @@
 import type { Metadata } from 'next';
+import { content, tr } from './content';
 import {
   getDictionary,
   hreflangAlternates,
+  htmlLang,
   localePath,
   ogLocale,
   type Locale,
 } from './i18n';
-import { AUTHOR, KNOWS_ABOUT, OG_IMAGE, SITE_URL, SOCIAL_PROFILES } from './site';
+import { OG_IMAGE, SITE_URL } from './site';
+
+const { profile, contact } = content;
 
 /**
  * Metadata equivalente para cada idioma. Ambas versiones declaran el mismo
@@ -16,19 +20,19 @@ import { AUTHOR, KNOWS_ABOUT, OG_IMAGE, SITE_URL, SOCIAL_PROFILES } from './site
 export function buildMetadata(locale: Locale): Metadata {
   const dict = getDictionary(locale);
   const path = localePath(locale);
-  const title = `${AUTHOR.name} — ${dict.meta.role}`;
+  const title = `${profile.name} — ${profile.role[locale]}`;
+  const description = profile.metaDescription[locale];
 
   return {
     metadataBase: new URL(SITE_URL),
     title: {
       default: title,
-      template: `%s | ${AUTHOR.name}`,
+      template: `%s | ${profile.name}`,
     },
-    description: dict.meta.description,
-    keywords: dict.meta.keywords,
-    authors: [{ name: AUTHOR.name, url: SITE_URL }],
-    creator: AUTHOR.name,
-    publisher: AUTHOR.name,
+    description,
+    authors: [{ name: profile.name, url: SITE_URL }],
+    creator: profile.name,
+    publisher: profile.name,
     applicationName: dict.meta.applicationName,
     category: 'technology',
     alternates: {
@@ -41,7 +45,7 @@ export function buildMetadata(locale: Locale): Metadata {
       url: `${SITE_URL}${path === '/' ? '' : path}`,
       siteName: dict.meta.siteName,
       title,
-      description: dict.meta.description,
+      description,
       images: [{ ...OG_IMAGE, alt: title }],
     },
     twitter: {
@@ -49,7 +53,7 @@ export function buildMetadata(locale: Locale): Metadata {
       // una tarjeta de 1200x630, cambia a 'summary_large_image'.
       card: 'summary',
       title,
-      description: dict.meta.description,
+      description,
       images: [OG_IMAGE.url],
     },
     robots: {
@@ -71,11 +75,12 @@ export function buildMetadata(locale: Locale): Metadata {
   };
 }
 
+/** JSON-LD de la persona. Sin teléfono a propósito: solo se muestra en la página. */
 export function buildJsonLd(locale: Locale) {
   const dict = getDictionary(locale);
   const path = localePath(locale);
   const pageUrl = `${SITE_URL}${path === '/' ? '/' : path}`;
-  const lang = locale === 'es' ? 'es-CO' : 'en';
+  const lang = htmlLang[locale];
 
   return {
     '@context': 'https://schema.org',
@@ -85,21 +90,20 @@ export function buildJsonLd(locale: Locale) {
         // El @id es el mismo en ambos idiomas a propósito: es la misma persona,
         // no dos entidades distintas.
         '@id': `${SITE_URL}/#person`,
-        name: AUTHOR.name,
+        name: profile.name,
         url: SITE_URL,
         image: `${SITE_URL}${OG_IMAGE.url}`,
-        jobTitle: dict.meta.role,
-        description: dict.meta.description,
-        email: `mailto:${AUTHOR.email}`,
-        telephone: AUTHOR.phone,
+        jobTitle: profile.role[locale],
+        description: profile.metaDescription[locale],
+        email: `mailto:${contact.email}`,
         address: {
           '@type': 'PostalAddress',
-          addressLocality: AUTHOR.locality,
-          addressRegion: AUTHOR.region,
-          addressCountry: AUTHOR.country,
+          addressLocality: contact.location.locality,
+          addressRegion: contact.location.region,
+          addressCountry: contact.location.countryCode,
         },
-        sameAs: SOCIAL_PROFILES,
-        knowsAbout: KNOWS_ABOUT,
+        sameAs: [contact.github, contact.linkedin],
+        knowsAbout: content.skills.map((skill) => tr(skill, locale)),
         knowsLanguage: ['es', 'en'],
       },
       {
@@ -107,7 +111,7 @@ export function buildJsonLd(locale: Locale) {
         '@id': `${SITE_URL}/#website`,
         url: SITE_URL,
         name: dict.meta.siteName,
-        description: dict.meta.description,
+        description: profile.metaDescription[locale],
         inLanguage: lang,
         publisher: { '@id': `${SITE_URL}/#person` },
       },
@@ -115,7 +119,7 @@ export function buildJsonLd(locale: Locale) {
         '@type': 'ProfilePage',
         '@id': `${pageUrl}#profilepage`,
         url: pageUrl,
-        name: `${AUTHOR.name} — ${dict.meta.role}`,
+        name: `${profile.name} — ${profile.role[locale]}`,
         isPartOf: { '@id': `${SITE_URL}/#website` },
         about: { '@id': `${SITE_URL}/#person` },
         inLanguage: lang,

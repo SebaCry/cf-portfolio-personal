@@ -1,45 +1,47 @@
 @import "tailwindcss";
 
+/* Contrastes (WCAG 2.1) calculados con la fórmula de luminancia relativa:
+   oscuro: primary 10,6:1 sobre el fondo; on-primary sobre primary 10,3:1;
+           neutral-variant 7,3:1.
+   claro:  primary 5,4:1 sobre blanco; on-primary (blanco) sobre primary 5,4:1;
+           neutral-variant 6,7:1. */
 :root {
   color-scheme: dark;
 
-  /* Dark mode colors (default) */
-  --primary: #46dc00;
-  --secondary: #34d399;
-  --tertiary: #10b981;
-  --error: #ff5449;
-  --neutral: #8f9193;
-  --neutral-variant: #8b9198;
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --card-bg: #111111;
+  /* Modo oscuro (por defecto): grafito con un toque de verde, no negro puro. */
+  --primary: #7bd88f;
+  --on-primary: #0b1a10;
+  --error: #ff6b61;
+  --neutral: #8d9792;
+  --neutral-variant: #9ba59f;
+  --background: #101513;
+  --foreground: #e8ece9;
+  --card-bg: #161c19;
 
   /* Superficie del navbar. Componentes separados por espacios: la notación
      rgb(R G B / alfa) no admite comas mezcladas con la barra. */
-  --nav-rgb: 10 10 10;
+  --nav-rgb: 16 21 19;
 }
 
-/* Light mode colors */
+/* Modo claro */
 :root.light {
   color-scheme: light;
 
-  --primary: #2f9600;
-  --secondary: #059669;
-  --tertiary: #047857;
-  --error: #dc2626;
-  --neutral: #52525b;
-  --neutral-variant: #6b7280;
-  --background: #ffffff;
-  --foreground: #0a0a0a;
-  --card-bg: #f7f8f9;
+  --primary: #1f7a3a;
+  --on-primary: #ffffff;
+  --error: #c62828;
+  --neutral: #5f6a64;
+  --neutral-variant: #4f5a54;
+  --background: #f6f7f4;
+  --foreground: #121815;
+  --card-bg: #ffffff;
 
-  --nav-rgb: 255 255 255;
+  --nav-rgb: 246 247 244;
 }
 
 @theme inline {
   --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
-  --color-tertiary: var(--tertiary);
+  --color-on-primary: var(--on-primary);
   --color-error: var(--error);
   --color-neutral: var(--neutral);
   --color-neutral-variant: var(--neutral-variant);
@@ -72,12 +74,12 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Keyframes (no pertenecen a ninguna capa del cascade)
+   Keyframes: solo la entrada del Hero y el modal del vídeo.
 --------------------------------------------------------------------------- */
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translate3d(0, 24px, 0);
+    transform: translate3d(0, 20px, 0);
   }
   to {
     opacity: 1;
@@ -97,41 +99,11 @@
 @keyframes scale-in {
   from {
     opacity: 0;
-    transform: scale3d(0.92, 0.92, 1);
+    transform: scale3d(0.94, 0.94, 1);
   }
   to {
     opacity: 1;
     transform: none;
-  }
-}
-
-@keyframes bob {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(0, 10px, 0);
-  }
-}
-
-@keyframes orb-drift-a {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(70px, 40px, 0) scale(1.15);
-  }
-}
-
-@keyframes orb-drift-b {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(-70px, -40px, 0) scale(1.2);
   }
 }
 
@@ -142,77 +114,69 @@
 --------------------------------------------------------------------------- */
 @layer components {
   /* Rendimiento de scroll: las secciones fuera de pantalla no se pintan ni se
-     les calcula el layout. contain-intrinsic-size evita saltos del scrollbar. */
+     les calcula el layout. contain-intrinsic-size evita saltos del scrollbar.
+     Ojo: también crea un bloque contenedor para `position: fixed`, por eso el
+     modal del vídeo se monta con un portal en <body>. */
   .section-defer {
     content-visibility: auto;
-    /* `auto` memoriza la altura real tras el primer render; los 1200px son
-       sólo la estimación inicial, cercana a la altura típica de una sección. */
-    contain-intrinsic-size: auto 1200px;
+    contain-intrinsic-size: auto 900px;
   }
 
-  /* Animaciones de entrada del Hero: corren en el primer pintado, sin JS. */
   .anim-up {
     animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .anim-in {
-    animation: fade-in 0.7s ease-out both;
+    animation: fade-in 0.3s ease-out both;
   }
   .anim-scale {
     animation: scale-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
-  .anim-bob {
-    animation: bob 2.4s ease-in-out infinite;
-  }
 
-  /* Reveal al hacer scroll — lo activa <Reveal> con un IntersectionObserver.
-     Sin JS (ver <noscript> en layout.tsx) el contenido se muestra igual. */
-  .reveal {
-    opacity: 0;
-    transform: translate3d(0, 24px, 0);
+  /* Botones. El texto sobre primary usa --on-primary, nunca blanco fijo. */
+  .btn-primary,
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
     transition:
-      opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-    transition-delay: var(--reveal-delay, 0ms);
+      opacity 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
   }
-  .reveal[data-dir="left"] {
-    transform: translate3d(-32px, 0, 0);
+  .btn-primary {
+    background: var(--primary);
+    color: var(--on-primary);
   }
-  .reveal[data-dir="right"] {
-    transform: translate3d(32px, 0, 0);
+  .btn-primary:hover {
+    opacity: 0.9;
   }
-  .reveal[data-dir="scale"] {
-    transform: scale3d(0.94, 0.94, 1);
+  .btn-ghost {
+    border: 1px solid color-mix(in srgb, var(--neutral) 40%, transparent);
+    color: var(--foreground);
   }
-  .reveal[data-visible="true"] {
-    opacity: 1;
-    transform: none;
-  }
-
-  /* Orbes decorativos: sólo se anima `transform`, que corre en el compositor.
-     will-change hace que la capa desenfocada se rasterice una vez en lugar de
-     en cada frame (era la causa principal del scroll a tirones). */
-  .orb {
-    position: absolute;
-    border-radius: 9999px;
-    filter: blur(64px);
-    will-change: transform;
-    pointer-events: none;
-  }
-  .orb--sm {
-    filter: blur(22px);
-  }
-  .orb--a {
-    animation: orb-drift-a 14s ease-in-out infinite;
-  }
-  .orb--b {
-    animation: orb-drift-b 18s ease-in-out infinite;
-  }
-  .orb--slow {
-    animation-duration: 24s;
+  .btn-ghost:hover {
+    border-color: var(--primary);
+    color: var(--primary);
   }
 
-  /* Navbar: el fondo se define con la variable de tema, así que también
-     funciona en modo claro (antes estaba fijo en rgba(10,10,10,…)).
+  /* Enlace de texto con flecha (demo, sitio, etc.). */
+  .link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 500;
+    color: var(--primary);
+    text-underline-offset: 4px;
+  }
+  .link:hover {
+    text-decoration: underline;
+  }
+
+  /* Navbar: el fondo se define con la variable de tema.
      Transición por CSS: no re-renderiza React en cada frame del scroll. */
   .nav-surface {
     background-color: rgb(var(--nav-rgb) / 0);
@@ -222,37 +186,25 @@
       backdrop-filter 0.3s ease;
   }
   .nav-surface[data-scrolled="true"] {
-    background-color: rgb(var(--nav-rgb) / 0.82);
+    background-color: rgb(var(--nav-rgb) / 0.85);
     backdrop-filter: blur(12px);
-    border-bottom-color: rgb(143 145 147 / 0.2);
+    border-bottom-color: color-mix(in srgb, var(--neutral) 20%, transparent);
   }
 
-  /* Subrayado animado de los enlaces del navbar. */
+  /* Subrayado de la sección activa en el navbar. */
   .nav-link::after {
     content: "";
     position: absolute;
     left: 0;
-    bottom: -4px;
+    bottom: -6px;
     height: 2px;
     width: 0;
-    background: linear-gradient(to right, var(--primary), var(--secondary));
+    background: var(--primary);
     transition: width 0.25s ease;
   }
   .nav-link:hover::after,
   .nav-link[data-active="true"]::after {
     width: 100%;
-  }
-
-  /* Barras de habilidades: se anima `transform`, no `width`
-     (width fuerza recálculo de layout en cada frame; scaleX no). */
-  .skill-bar {
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-    transition-delay: var(--bar-delay, 0ms);
-  }
-  [data-visible="true"] .skill-bar {
-    transform: scaleX(var(--level, 1));
   }
 }
 
@@ -271,14 +223,10 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .reveal,
   .anim-up,
   .anim-in,
   .anim-scale {
     opacity: 1 !important;
     transform: none !important;
-  }
-  .skill-bar {
-    transform: scaleX(var(--level, 1)) !important;
   }
 }

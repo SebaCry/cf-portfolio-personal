@@ -2,6 +2,7 @@
 
 import { Play, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 /**
  * Las etiquetas llegan ya resueltas desde el servidor. El diccionario las
@@ -105,7 +106,7 @@ export default function ProjectVideo({ src, labels }: ProjectVideoProps) {
           />
         ) : (
           /* Póster hecho con CSS: cero peticiones extra. */
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-card-bg to-tertiary/20" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-card-bg to-card-bg" />
         )}
 
         <button
@@ -124,39 +125,43 @@ export default function ProjectVideo({ src, labels }: ProjectVideoProps) {
         </button>
       </div>
 
-      {isExpanded && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={labels.dialog}
-          className="anim-in fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
-          onClick={() => setIsExpanded(false)}
-        >
-          <button
-            type="button"
-            onClick={() => setIsExpanded(false)}
-            className="absolute top-6 right-6 z-10 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
-            aria-label={labels.close}
-            autoFocus
-          >
-            <X className="h-6 w-6" />
-          </button>
-
+      {isExpanded &&
+        // Portal a <body>: `.section-defer` (content-visibility) crea un bloque
+        // contenedor y un `position: fixed` dentro quedaría recortado a la sección.
+        createPortal(
           <div
-            className="anim-scale relative aspect-video w-full max-w-6xl overflow-hidden rounded-2xl shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={labels.dialog}
+            className="anim-in fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+            onClick={() => setIsExpanded(false)}
           >
-            <video
-              src={src}
-              autoPlay
-              loop
-              controls
-              aria-label={labels.video}
-              className="h-full w-full object-contain"
-            />
-          </div>
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={() => setIsExpanded(false)}
+              className="absolute top-6 right-6 z-10 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
+              aria-label={labels.close}
+              autoFocus
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            <div
+              className="anim-scale relative aspect-video w-full max-w-6xl overflow-hidden rounded-2xl shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <video
+                src={src}
+                autoPlay
+                loop
+                controls
+                aria-label={labels.video}
+                className="h-full w-full object-contain"
+              />
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 }

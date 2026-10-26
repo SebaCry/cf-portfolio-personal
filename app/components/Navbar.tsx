@@ -1,41 +1,32 @@
 'use client';
 
 import { Menu, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Dictionary } from '../lib/i18n';
 import type { Locale } from '../lib/i18n/config';
-import { AUTHOR } from '../lib/site';
+import { SECTIONS } from '../lib/site';
 import LanguageToggle from './LanguageToggle';
 import ThemeToggle from './ThemeToggle';
 
 /**
- * Recibe sólo `dict.nav`, que son puros strings y cruzan sin problema la
- * frontera servidor -> cliente. El diccionario completo NO se puede pasar:
- * contiene funciones y React no sabe serializarlas a través del límite RSC.
+ * Recibe sólo strings (`dict.nav` y el nombre), que cruzan sin problema la
+ * frontera servidor -> cliente. No importa `content`: arrastraría todo el
+ * portafolio, en los dos idiomas, al bundle del navegador.
  */
 type NavbarProps = {
   t: Dictionary['nav'];
   locale: Locale;
+  name: string;
 };
 
-export default function Navbar({ t, locale }: NavbarProps) {
-
-  const navLinks = [
-    { name: t.home, href: '#hero', id: 'hero' },
-    { name: t.about, href: '#about', id: 'about' },
-    { name: t.experience, href: '#experience', id: 'experience' },
-    { name: t.skills, href: '#skills', id: 'skills' },
-    { name: t.projects, href: '#projects', id: 'projects' },
-    { name: t.contact, href: '#contact', id: 'contact' },
-  ];
-
+export default function Navbar({ t, locale, name }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeId, setActiveId] = useState('hero');
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const firstLinkRef = useRef<HTMLAnchorElement>(null);
 
-  // Scroll: listener pasivo + rAF. Sin `passive` el navegador tiene que
-  // esperar a saber si vas a llamar preventDefault antes de desplazar,
-  // que es lo que hacía que el scroll se sintiera pesado.
+  // Scroll: listener pasivo + rAF, para no bloquear el desplazamiento.
   useEffect(() => {
     let ticking = false;
 
@@ -55,7 +46,7 @@ export default function Navbar({ t, locale }: NavbarProps) {
 
   // Sección activa mediante IntersectionObserver (no cuesta nada en el scroll).
   useEffect(() => {
-    const sections = ['hero', 'about', 'experience', 'skills', 'projects', 'contact']
+    const sections = ['hero', ...SECTIONS.map((section) => section.id)]
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
 
@@ -75,24 +66,30 @@ export default function Navbar({ t, locale }: NavbarProps) {
     return () => observer.disconnect();
   }, []);
 
-  // Bloquea el scroll del fondo mientras el menú móvil está abierto.
+  // Menú móvil abierto: el resto de la página queda `inert` (el foco no se
+  // escapa detrás del panel), se bloquea el scroll del fondo, el foco va al
+  // primer enlace y Escape cierra devolviendo el foco al botón.
   useEffect(() => {
     if (!isMenuOpen) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, [isMenuOpen]);
 
-  // Cerrar con Escape.
-  useEffect(() => {
-    if (!isMenuOpen) return;
+    const background = document.querySelectorAll('main, footer');
+    background.forEach((el) => el.setAttribute('inert', ''));
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    firstLinkRef.current?.focus();
+
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsMenuOpen(false);
+      if (event.key !== 'Escape') return;
+      setIsMenuOpen(false);
+      menuButtonRef.current?.focus();
     };
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+
+    return () => {
+      background.forEach((el) => el.removeAttribute('inert'));
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
   }, [isMenuOpen]);
 
   return (
@@ -101,42 +98,38 @@ export default function Navbar({ t, locale }: NavbarProps) {
         className="nav-surface fixed top-0 right-0 left-0 z-50 border-b border-transparent"
         data-scrolled={isScrolled}
       >
-        <nav aria-label={t.mainNav} className="mx-auto max-w-7xl px-6 sm:px-12 lg:px-16">
-          <div className="flex h-20 items-center justify-between">
-            <a href="#hero" className="text-lg font-bold sm:text-2xl">
-              <span className="bg-gradient-to-r from-primary via-tertiary to-secondary bg-clip-text text-transparent">
-                {AUTHOR.name}
-              </span>
+        <nav aria-label={t.mainNav} className="mx-auto max-w-6xl px-6 sm:px-10">
+          <div className="flex h-16 items-center justify-between gap-6">
+            <a href="#hero" className="font-semibold tracking-tight text-foreground">
+              {name}
             </a>
 
-            <div className="hidden items-center gap-6 lg:flex xl:gap-8">
-              {navLinks.map((link) => (
+            <div className="hidden items-center gap-6 xl:flex">
+              {SECTIONS.map((section) => (
                 <a
-                  key={link.id}
-                  href={link.href}
-                  data-active={activeId === link.id}
-                  className="nav-link relative text-neutral-variant transition-colors hover:text-foreground data-[active=true]:text-foreground"
-                  aria-current={activeId === link.id ? 'true' : undefined}
+                  key={section.id}
+                  href={`#${section.id}`}
+                  data-active={activeId === section.id}
+                  className="nav-link relative text-sm text-neutral-variant transition-colors hover:text-foreground data-[active=true]:text-foreground"
+                  aria-current={activeId === section.id ? 'true' : undefined}
                 >
-                  {link.name}
+                  {t[section.label]}
                 </a>
               ))}
 
               <LanguageToggle locale={locale} label={t.switchLanguage} />
               <ThemeToggle toLight={t.toLight} toDark={t.toDark} />
 
-              <a
-                href="#contact"
-                className="rounded-full bg-gradient-to-r from-primary to-secondary px-5 py-2 font-medium text-white transition-transform hover:scale-105 active:scale-95"
-              >
+              <a href="#contact" className="btn-primary !px-4 !py-2 text-sm">
                 {t.hire}
               </a>
             </div>
 
-            <div className="flex items-center gap-2 lg:hidden">
+            <div className="flex items-center gap-2 xl:hidden">
               <LanguageToggle locale={locale} label={t.switchLanguage} />
               <ThemeToggle toLight={t.toLight} toDark={t.toDark} />
               <button
+                ref={menuButtonRef}
                 type="button"
                 onClick={() => setIsMenuOpen((open) => !open)}
                 className="p-2 text-foreground"
@@ -155,30 +148,23 @@ export default function Navbar({ t, locale }: NavbarProps) {
       <div
         id="mobile-menu"
         hidden={!isMenuOpen}
-        className="fixed inset-0 z-40 bg-background/95 backdrop-blur-lg lg:hidden"
+        className="fixed inset-0 z-40 bg-background/95 backdrop-blur-lg xl:hidden"
       >
         <nav
           aria-label={t.mobileNav}
-          className="flex h-full flex-col items-center justify-center gap-8"
+          className="flex h-full flex-col items-center justify-center gap-6"
         >
-          {navLinks.map((link) => (
+          {SECTIONS.map((section, index) => (
             <a
-              key={link.id}
-              href={link.href}
+              key={section.id}
+              ref={index === 0 ? firstLinkRef : undefined}
+              href={`#${section.id}`}
               onClick={() => setIsMenuOpen(false)}
               className="text-2xl font-medium text-neutral-variant transition-colors hover:text-foreground"
             >
-              {link.name}
+              {t[section.label]}
             </a>
           ))}
-
-          <a
-            href="#contact"
-            onClick={() => setIsMenuOpen(false)}
-            className="rounded-full bg-gradient-to-r from-primary to-secondary px-8 py-3 text-lg font-medium text-white"
-          >
-            {t.hire}
-          </a>
         </nav>
       </div>
     </>

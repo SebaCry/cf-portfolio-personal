@@ -38,18 +38,18 @@ export default function ThemeToggle({ toLight, toDark }: { toLight: string; toDa
       aria-pressed={!isDark}
     >
       <span
-        className="absolute top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary shadow-lg transition-transform duration-300 ease-out"
+        className="absolute top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary shadow-lg transition-transform duration-300 ease-out"
         style={{ transform: isDark ? 'translateX(0)' : 'translateX(24px)' }}
       >
         {/* Ambos iconos van montados y sólo se alterna la opacidad: evita
             que el primer clic tenga que crear un nodo nuevo. */}
         <Moon
-          className="absolute h-3 w-3 text-white transition-opacity"
+          className="absolute h-3 w-3 text-on-primary transition-opacity"
           style={{ opacity: isDark ? 1 : 0 }}
           aria-hidden="true"
         />
         <Sun
-          className="absolute h-3 w-3 text-white transition-opacity"
+          className="absolute h-3 w-3 text-on-primary transition-opacity"
           style={{ opacity: isDark ? 0 : 1 }}
           aria-hidden="true"
         />

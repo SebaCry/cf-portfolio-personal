@@ -55,10 +55,6 @@ export default function RootDocument({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(locale)) }}
         />
-        {/* Sin JS no hay IntersectionObserver: el contenido se muestra igual. */}
-        <noscript>
-          <style>{`.reveal{opacity:1!important;transform:none!important}.skill-bar{transform:scaleX(var(--level,1))!important}`}</style>
-        </noscript>
       </head>
       <body className={`${display.variable} ${mono.variable} antialiased`}>{children}</body>
     </html>

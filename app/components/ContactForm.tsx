@@ -119,7 +119,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
       <button
         type="submit"
         disabled={isSending}
-        className="group w-full rounded-xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-medium text-white transition-transform hover:scale-[1.02] active:scale-95 disabled:cursor-wait disabled:opacity-70 disabled:hover:scale-100"
+        className="group w-full rounded-lg bg-primary px-6 py-3.5 font-semibold text-on-primary transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-70"
       >
         <span className="flex items-center justify-center gap-2">
           {isSending ? (
