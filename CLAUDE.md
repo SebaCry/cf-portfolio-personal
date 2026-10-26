@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Personal portfolio (Next.js 15 App Router, React 19, Tailwind v4) deployed to Cloudflare Workers via OpenNext at https://sebacry.me. `README.md` (Spanish) is the detailed reference; code comments are in Spanish too, so keep new ones in Spanish.
+Personal portfolio (Next.js 15 App Router, React 19, Tailwind v4) deployed to Cloudflare Workers via OpenNext at https://sebasperez.cc. `README.md` (Spanish) is the detailed reference; code comments are in Spanish too, so keep new ones in Spanish.
 
 ## Commands
 

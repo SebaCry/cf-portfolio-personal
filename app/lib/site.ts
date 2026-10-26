@@ -7,7 +7,7 @@ import type { Dictionary } from './i18n/es';
  * Este archivo lo importa `Navbar` (cliente): no importes aquí `content`, o
  * los dos idiomas del portafolio acabarían en el bundle del navegador.
  */
-export const SITE_URL = 'https://sebacry.me';
+export const SITE_URL = 'https://sebasperez.cc';
 
 /** Retrato del Hero y tarjeta de Open Graph. */
 export const OG_IMAGE = {

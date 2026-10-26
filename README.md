@@ -65,7 +65,7 @@ npx wrangler login   # sólo la primera vez (abre el navegador)
 npm run deploy       # build de OpenNext + subida a Cloudflare
 ```
 
-El sitio queda en <https://sebacry.me> (el custom domain está declarado en
+El sitio queda en <https://sebasperez.cc> (el custom domain está declarado en
 `wrangler.jsonc`; wrangler crea el registro DNS en el primer despliegue).
 
 Antes de publicar conviene probarlo en el runtime real, que **no** es lo mismo que
@@ -99,8 +99,8 @@ del bundle) sólo aparecen ahí.
 
 ### www
 
-`wrangler.jsonc` sólo declara el dominio raíz. Si quieres que `www.sebacry.me` funcione,
-crea una **Redirect Rule** 301 hacia `sebacry.me` en el panel de Cloudflare (Rules >
+`wrangler.jsonc` sólo declara el dominio raíz. Si quieres que `www.sebasperez.cc` funcione,
+crea una **Redirect Rule** 301 hacia `sebasperez.cc` en el panel de Cloudflare (Rules >
 Redirect Rules). Añadirlo como segundo custom domain haría que dos URLs sirvieran el
 mismo contenido.
 
