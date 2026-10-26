@@ -36,7 +36,9 @@ function ProjectCard({ project, dict, locale }: Props & { project: Project }) {
 
       <div>
         <h3 className="text-xl font-semibold text-foreground">{project.title}</h3>
-        <p className="mt-2 leading-relaxed text-neutral-variant">{project.description[locale]}</p>
+        {project.description && (
+          <p className="mt-2 leading-relaxed text-neutral-variant">{project.description[locale]}</p>
+        )}
 
         {project.access && (
           <p className="mt-3 flex items-center gap-2 text-sm text-foreground">

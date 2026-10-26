@@ -43,7 +43,8 @@ export type Portfolio = {
     /** kebab-case, único: es el ancla `#proyecto-<id>`. */
     id: string;
     title: string;
-    description: L<string>;
+    /** Opcional: solo si el JSON de Sebas trae descripción (SIEKI no la trae). */
+    description?: L<string>;
     technologies: string[];
     /** Solo enlaces públicos: nunca un repo privado. */
     links: { demo?: string; app?: string; video?: string };

@@ -145,10 +145,7 @@ export const portfolio = {
     {
       id: 'sieki',
       title: 'SIEKI',
-      description: {
-        es: 'Primer sistema de EPA Keratinas Ibagué, desarrollado en SIEKI: aplicación web con backend en Django, interfaz en React y base de datos en Supabase.',
-        en: 'The first system built for EPA Keratinas Ibagué at SIEKI: a web app with a Django backend, a React front end and a Supabase database.',
-      },
+      // Sin descripción: el JSON de Sebas no la trae para este proyecto.
       technologies: ['Django', 'React', 'Supabase', 'PostgreSQL'],
       links: { demo: 'https://django-sieki.onrender.com' },
     },
