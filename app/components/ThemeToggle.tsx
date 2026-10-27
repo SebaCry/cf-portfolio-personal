@@ -1,7 +1,8 @@
 'use client';
 
 import { Moon, Sun } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { type MouseEvent, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 type Theme = 'light' | 'dark';
 
@@ -14,9 +15,11 @@ export default function ThemeToggle({ toLight, toDark }: { toLight: string; toDa
     setTheme(document.documentElement.classList.contains('light') ? 'light' : 'dark');
   }, []);
 
-  const toggleTheme = () => {
+  const applyTheme = () => {
     const next: Theme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
+    // flushSync: la View Transition captura el DOM al volver el callback, así
+    // que el interruptor tiene que estar ya en su posición nueva.
+    flushSync(() => setTheme(next));
     document.documentElement.classList.toggle('light', next === 'light');
     try {
       localStorage.setItem('theme', next);
@@ -24,6 +27,21 @@ export default function ThemeToggle({ toLight, toDark }: { toLight: string; toDa
       // Modo privado o almacenamiento bloqueado: el tema sigue funcionando,
       // sólo no se recuerda entre visitas.
     }
+  };
+
+  // El tema nuevo se abre en círculo desde el clic (CSS: .theme-vt en globals.css).
+  // Sin View Transitions o con movimiento reducido, cambia sin animación.
+  const toggleTheme = (event: MouseEvent) => {
+    const root = document.documentElement;
+    if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches)
+      return applyTheme();
+    const { clientX: x, clientY: y } = event;
+    const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    root.style.setProperty('--vt-x', `${x}px`);
+    root.style.setProperty('--vt-y', `${y}px`);
+    root.style.setProperty('--vt-r', `${r}px`);
+    root.classList.add('theme-vt');
+    document.startViewTransition(applyTheme).finished.finally(() => root.classList.remove('theme-vt'));
   };
 
   const isDark = theme !== 'light';

@@ -2,7 +2,7 @@ import { Github, Lock } from 'lucide-react';
 import { content } from '../lib/content';
 import type { Portfolio } from '../lib/content/schema';
 import type { Dictionary, Locale } from '../lib/i18n';
-import ProjectVideo from './ProjectVideo';
+import ProjectDemo from './ProjectDemo';
 import { Chips, ExternalLink, Section } from './ui';
 
 type Project = Portfolio['projects'][number];
@@ -11,31 +11,40 @@ type Props = { dict: Dictionary; locale: Locale };
 function ProjectCard({ project, dict, locale }: Props & { project: Project }) {
   const t = dict.projects;
   const sibling = content.projects.find((other) => other.id === project.sameCodeAs);
-  const { demo, app, video } = project.links;
+  const { demo, app } = project.links;
+  const media = project.media;
+  // Portada: el póster o, si no hay, la primera captura.
+  const poster = media && (media.poster ?? media.images?.[0]?.src);
+
+  const demoButton = media && (
+    <ProjectDemo
+      poster={poster}
+      video={media.video}
+      images={media.images?.map((image) => ({ src: image.src, alt: image.alt[locale] }))}
+      // Las etiquetas se resuelven aquí, en el servidor: el diccionario las
+      // genera con funciones y esas no cruzan la frontera hacia el cliente.
+      labels={{
+        open: t.watchDemo,
+        ofProject: t.ofProject(project.title),
+        dialog: t.videoDialog(project.title),
+        video: t.videoLabel(project.title),
+        gallery: t.gallery(project.title),
+        close: t.close,
+      }}
+    />
+  );
 
   return (
     <article
       id={`proyecto-${project.id}`}
-      className={`scroll-mt-28 rounded-xl border border-neutral/20 bg-card-bg p-5 sm:p-6 ${
-        video ? 'grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-center' : ''
+      className={`card reveal scroll-mt-28 p-5 sm:p-6 ${
+        poster ? 'grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-center' : ''
       }`}
     >
-      {video && (
-        <ProjectVideo
-          src={video}
-          // Las etiquetas se resuelven aquí, en el servidor: el diccionario las
-          // genera con funciones y esas no cruzan la frontera hacia el cliente.
-          labels={{
-            video: t.videoLabel(project.title),
-            expand: t.videoExpand(project.title),
-            dialog: t.videoDialog(project.title),
-            close: t.close,
-          }}
-        />
-      )}
+      {poster && demoButton}
 
       <div>
-        <h3 className="text-xl font-semibold text-foreground">{project.title}</h3>
+        <h3 className="text-xl font-semibold text-foreground sm:text-2xl">{project.title}</h3>
         {project.description && (
           <p className="mt-2 leading-relaxed text-neutral-variant">{project.description[locale]}</p>
         )}
@@ -50,6 +59,8 @@ function ProjectCard({ project, dict, locale }: Props & { project: Project }) {
         <div className="mt-4">
           <Chips items={project.technologies} />
         </div>
+
+        {!poster && demoButton && <div className="mt-5">{demoButton}</div>}
 
         <p className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
           {demo && (

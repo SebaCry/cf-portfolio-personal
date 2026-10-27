@@ -43,21 +43,21 @@ export const en: Dictionary = {
   },
 
   projects: {
-    demoLink: 'View demo',
+    demoLink: 'Live demo',
+    watchDemo: 'Watch demo',
+    gallery: (title: string) => `${title} screenshots`,
     appLink: 'Open app',
     ofProject: (title: string) => `for ${title}`,
     sharedTitle: 'Two products, one multi-company codebase',
     sameCodeAs: (title: string) => `Same codebase as ${title}`,
     moreOnGithub: 'More code on GitHub',
     videoLabel: (title: string) => `Video demo of ${title}`,
-    videoExpand: (title: string) => `Watch the ${title} demo full screen`,
     videoDialog: (title: string) => `${title} demo`,
     close: 'Close',
   },
 
   websites: {
-    stack: 'Stack',
-  },
+    stack: 'Stack',  },
 
   skills: {
     technical: 'Technical',

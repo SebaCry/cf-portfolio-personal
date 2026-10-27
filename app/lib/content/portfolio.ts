@@ -98,8 +98,9 @@ export const portfolio = {
         'Cloudflare Tunnel + Access',
         'PWA',
       ],
-      links: {
-        demo: 'https://sebsbot-demo.jspc513.workers.dev',
+      links: { demo: 'https://sebsbot-demo.jspc513.workers.dev' },
+      media: {
+        poster: '/images/proyectos/sebsbot.webp',
         video: 'https://sebsbot-demo.jspc513.workers.dev/video.mp4',
       },
     },
@@ -120,7 +121,7 @@ export const portfolio = {
         'Drizzle',
         'Zod',
       ],
-      links: { app: 'https://bunker-api-dev.jspc513.workers.dev/' },
+      links: { app: 'https://bunker-api-dev.jspc513.workers.dev/admin' },
       access: {
         es: 'Acceso por invitación (Cloudflare Access)',
         en: 'Invitation-only access (Cloudflare Access)',
@@ -135,7 +136,7 @@ export const portfolio = {
         en: 'The same system in multi-company mode for a salon and distributor: point of sale, services with stylist payouts and cash register. It replaces Alegra.',
       },
       technologies: ['Hono', 'TypeScript', 'Cloudflare Workers', 'PostgreSQL (Neon)', 'Drizzle'],
-      links: { app: 'https://epa-api-dev.jspc513.workers.dev/' },
+      links: { app: 'https://epa-api-dev.jspc513.workers.dev/admin' },
       access: {
         es: 'Acceso por invitación (Cloudflare Access)',
         en: 'Invitation-only access (Cloudflare Access)',
@@ -151,39 +152,62 @@ export const portfolio = {
     },
   ],
 
+  // Logos descargados del HTML de cada sitio (logo del header, favicon SVG o
+  // apple-touch-icon) y optimizados a 96x96: ver README, "Logos de los sitios".
   websites: [
     {
       name: 'Iglesia Jordán Ibagué',
       url: 'https://iglesiajordanibague.org',
       technologies: ['Next.js', 'Cloudflare Workers'],
+      logo: '/images/sitios/iglesia-jordan-ibague.webp',
     },
     {
       name: 'Vetro Steel Design Studio',
       url: 'https://www.vetrosteelut.com',
       technologies: ['Astro', 'Tailwind CSS'],
+      logo: '/images/sitios/vetro-steel.webp',
     },
     {
       name: 'JP Media Groups',
       url: 'https://www.jpmediagroups.com',
       technologies: ['Astro', 'Tailwind CSS'],
+      logo: '/images/sitios/jp-media-groups.svg',
     },
     {
       name: 'American Wireless',
       url: 'https://americanwirelessut.com',
       technologies: ['Astro', 'Tailwind CSS'],
+      logo: '/images/sitios/american-wireless.webp',
     },
     {
       name: 'Anderson Insurance Group',
       url: 'https://www.anderson.insure',
       technologies: ['WordPress', 'PHP', 'SEO'],
+      logo: '/images/sitios/anderson-insurance.webp',
     },
-    { name: 'ECC', url: 'https://ecc.edu.co', technologies: ['WordPress', 'SEO'] },
-    { name: 'Healthy Xmile', url: 'https://healthyxmile.com', technologies: ['Astro'] },
-    { name: 'Ortho Smile', url: 'https://orthodonsmile.com', technologies: ['Astro'] },
+    {
+      name: 'ECC',
+      url: 'https://ecc.edu.co',
+      technologies: ['WordPress', 'SEO'],
+      logo: '/images/sitios/ecc.webp',
+    },
+    {
+      name: 'Healthy Xmile',
+      url: 'https://healthyxmile.com',
+      technologies: ['Astro'],
+      logo: '/images/sitios/healthy-xmile.svg',
+    },
+    {
+      name: 'Ortho Smile',
+      url: 'https://orthodonsmile.com',
+      technologies: ['Astro'],
+      logo: '/images/sitios/ortho-smile.webp',
+    },
     {
       name: 'ROOFCORP',
       url: 'https://roofcorp-mvp.pages.dev',
       technologies: ['Astro', 'Tailwind CSS', 'Cloudflare Pages'],
+      logo: '/images/sitios/roofcorp.webp',
     },
   ],
 
