@@ -45,15 +45,16 @@ npm test          # tests/content.test.mjs (node:test, no deps); CHECK_LINKS=1 h
 
 **Shared pieces.** `SECTIONS` (`app/lib/site.ts`) is the ordered section list used by `Navbar` and `Footer`; keep it in sync with the order in `HomePage.tsx`. `app/components/ui.tsx` has `Section` (sticky title on the left, CV-style), `Chips`, `PeriodRow`, `ExternalLink` and `SocialLinks` (Hero, Contact, Footer).
 
-**Server components by default.** Only `Navbar`, `ThemeToggle`, `LanguageToggle`, `ProjectVideo` and `ContactForm` are `'use client'`. The contact form sends through EmailJS (`@emailjs/browser`) with public IDs hardcoded in `ContactForm.tsx`. There is no backend or env vars.
+**Server components by default.** Only `Navbar`, `ThemeToggle`, `LanguageToggle`, `ProjectDemo` and `ContactForm` are `'use client'`. The contact form sends through EmailJS (`@emailjs/browser`) with public IDs hardcoded in `ContactForm.tsx`. There is no backend or env vars.
 
 **Theming.** Color tokens are CSS variables on `:root` (dark, the default) and `:root.light` in `app/globals.css`, exposed to Tailwind through `@theme inline` (`bg-primary`, `text-on-primary`, `text-neutral-variant`, etc.). Text on `bg-primary` always uses `text-on-primary` (never `text-white`). The contrast ratios are documented at the top of `globals.css`: recheck them if you change a color. The `light` class is set before first paint by the inline script in `RootDocument.tsx`. Add new colors as variables in both blocks plus a `@theme inline` entry.
 
 ## Performance and a11y decisions (don't revert without measuring)
 
-- No animation library and no scroll reveals: the only motion is the Hero entrance (CSS `@keyframes`), and `prefers-reduced-motion` disables it.
-- Sections use `.section-defer` (`content-visibility: auto`). That creates a containing block for `position: fixed`, so overlays (the video modal) must be portaled to `<body>`.
-- The SEBSBOT demo video is remote (`links.video`) and only loads near the viewport, or on click on mobile / data saver.
+- No animation library and no JS for motion. Scroll reveals are CSS scroll-driven animations (`.reveal`, `.reveal-auto` in `Section`) inside `@supports (animation-timeline: view())` + `prefers-reduced-motion: no-preference`; without support the page is static and complete. Hover/press effects use the individual `translate`/`scale` properties, not `transform`, so they don't fight the reveal animations. Only transform/opacity are animated (no CLS).
+- View Transitions: `@view-transition { navigation: auto }` crossfades the `/` <-> `/en` switch; `ThemeToggle` wraps the theme change in `startViewTransition` (circle reveal, `.theme-vt`).
+- Sections use `.section-defer` (`content-visibility: auto`). That creates a containing block for `position: fixed`: overlays must be a modal `<dialog>` (top layer, like `ProjectDemo`) or portaled to `<body>`.
+- Project demos live in `projects[].media` (`poster`, `video`, `images`); local files are WebP in `public/images/proyectos/`. `ProjectDemo` mounts the `<video>` only while the `<dialog>` is open. Site logos are `websites[].logo` (`public/images/sitios/<slug>.svg|webp`, square, shown at 48px on a white tile); the asserts require one per site and `npm test` checks the files exist.
 - Mobile menu: while open, `main` and `footer` get `inert`, focus moves to the first link and Escape returns it to the toggle.
 - Fonts go through `next/font`, never a CSS `@import` from Google Fonts.
 - `lucide-react` is tree-shaken via `optimizePackageImports` in `next.config.ts`.

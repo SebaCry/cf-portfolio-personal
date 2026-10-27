@@ -47,13 +47,28 @@ export type Portfolio = {
     description?: L<string>;
     technologies: string[];
     /** Solo enlaces públicos: nunca un repo privado. */
-    links: { demo?: string; app?: string; video?: string };
+    links: { demo?: string; app?: string };
+    /**
+     * Modal "Ver demo": vídeo remoto (se descarga solo al abrir) y/o capturas.
+     * `poster` y las capturas son WebP 16:9 en /images/proyectos/.
+     */
+    media?: {
+      poster?: string;
+      video?: string;
+      images?: { src: string; alt: L<string> }[];
+    };
     /** Nota de acceso restringido, p. ej. Cloudflare Access. */
     access?: L<string>;
     /** id del proyecto que comparte el mismo código (la relación debe ser recíproca). */
     sameCodeAs?: string;
   }[];
-  websites: { name: string; url: string; technologies: string[] }[];
+  websites: {
+    name: string;
+    url: string;
+    technologies: string[];
+    /** Logo sacado del propio sitio: /images/sitios/<slug>.svg|webp, cuadrado. */
+    logo: string;
+  }[];
   education: { title: L<string>; institution: Text; start: Period; end: Period | null }[];
   skills: Text[];
   languages: { name: L<string>; level: L<string> }[];

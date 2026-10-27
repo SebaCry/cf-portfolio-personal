@@ -2,15 +2,19 @@
 
 /* Contrastes (WCAG 2.1) calculados con la fórmula de luminancia relativa:
    oscuro: primary 10,6:1 sobre el fondo; on-primary sobre primary 10,3:1;
-           neutral-variant 7,3:1.
+           neutral-variant 7,3:1; accent 12,4:1.
    claro:  primary 5,4:1 sobre blanco; on-primary (blanco) sobre primary 5,4:1;
-           neutral-variant 6,7:1. */
+           neutral-variant 6,7:1; accent 5,0:1 sobre el fondo.
+   accent solo va en el degradado del apellido del Hero (texto grande) y en
+   adornos; el texto de cuerpo sigue en primary / neutral-variant. */
 :root {
   color-scheme: dark;
 
   /* Modo oscuro (por defecto): grafito con un toque de verde, no negro puro. */
   --primary: #7bd88f;
   --on-primary: #0b1a10;
+  --accent: #5eead4;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --error: #ff6b61;
   --neutral: #8d9792;
   --neutral-variant: #9ba59f;
@@ -29,6 +33,7 @@
 
   --primary: #1f7a3a;
   --on-primary: #ffffff;
+  --accent: #0f766e;
   --error: #c62828;
   --neutral: #5f6a64;
   --neutral-variant: #4f5a54;
@@ -42,6 +47,7 @@
 @theme inline {
   --color-primary: var(--primary);
   --color-on-primary: var(--on-primary);
+  --color-accent: var(--accent);
   --color-error: var(--error);
   --color-neutral: var(--neutral);
   --color-neutral-variant: var(--neutral-variant);
@@ -74,7 +80,7 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Keyframes: solo la entrada del Hero y el modal del vídeo.
+   Keyframes. Todas animan solo transform/opacity (o clip-path en la View Transition).
 --------------------------------------------------------------------------- */
 @keyframes fade-up {
   from {
@@ -87,12 +93,39 @@
   }
 }
 
-@keyframes fade-in {
+/* Revelado al hacer scroll: solo el estado inicial; el final es el valor real. */
+@keyframes reveal {
   from {
     opacity: 0;
+    transform: translate3d(0, 2rem, 0) scale(0.98);
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes drift {
+  to {
+    transform: translate3d(-6vmax, 4vmax, 0) scale(1.15);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* Cambio de tema: el tema nuevo se abre en círculo desde el botón. */
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--vt-x) var(--vt-y));
   }
   to {
-    opacity: 1;
+    clip-path: circle(var(--vt-r) at var(--vt-x) var(--vt-y));
   }
 }
 
@@ -125,14 +158,13 @@
   .anim-up {
     animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
-  .anim-in {
-    animation: fade-in 0.3s ease-out both;
-  }
   .anim-scale {
-    animation: scale-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: scale-in 0.6s var(--ease-out) both;
   }
 
-  /* Botones. El texto sobre primary usa --on-primary, nunca blanco fijo. */
+  /* Microinteracciones. Se usa `translate`/`scale` (propiedades sueltas) y no
+     `transform`, para no pisar las animaciones de revelado, que usan transform.
+     Todo es transform/opacity: lo compone la GPU y no mueve el layout (CLS 0). */
   .btn-primary,
   .btn-ghost {
     display: inline-flex;
@@ -143,37 +175,248 @@
     padding: 0.75rem 1.25rem;
     font-weight: 600;
     transition:
-      opacity 0.2s ease,
+      translate 0.25s var(--ease-out),
+      scale 0.15s ease,
+      box-shadow 0.25s ease,
       border-color 0.2s ease,
       color 0.2s ease;
   }
+  /* El texto sobre primary usa --on-primary, nunca blanco fijo. */
   .btn-primary {
     background: var(--primary);
     color: var(--on-primary);
-  }
-  .btn-primary:hover {
-    opacity: 0.9;
   }
   .btn-ghost {
     border: 1px solid color-mix(in srgb, var(--neutral) 40%, transparent);
     color: var(--foreground);
   }
+  .btn-primary:hover,
+  .btn-ghost:hover,
+  .lift:hover {
+    translate: 0 -2px;
+  }
+  .btn-primary:hover {
+    box-shadow: 0 12px 28px -12px color-mix(in srgb, var(--primary) 80%, transparent);
+  }
   .btn-ghost:hover {
     border-color: var(--primary);
     color: var(--primary);
   }
+  .btn-primary:active,
+  .btn-ghost:active,
+  .lift:active {
+    translate: 0 0;
+    scale: 0.97;
+  }
+  .lift {
+    transition:
+      translate 0.25s var(--ease-out),
+      scale 0.15s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+  /* Flechas que se asoman en la dirección a la que llevan. */
+  .btn-primary > svg:last-child,
+  .arrow-nudge {
+    transition: translate 0.25s var(--ease-out);
+  }
+  .btn-primary:hover > svg:last-child {
+    translate: 0 2px;
+  }
+  a:hover .arrow-nudge,
+  .group:hover .arrow-nudge {
+    translate: 2px -2px;
+  }
 
-  /* Enlace de texto con flecha (demo, sitio, etc.). */
+  /* Enlace de texto: el subrayado crece de izquierda a derecha. */
   .link {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
     font-weight: 500;
     color: var(--primary);
-    text-underline-offset: 4px;
+    background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 1px;
+    transition: background-size 0.3s var(--ease-out);
   }
   .link:hover {
-    text-decoration: underline;
+    background-size: 100% 1px;
+  }
+
+  /* Tarjeta de proyecto: se eleva y se ilumina el borde al pasar el ratón. */
+  .card {
+    border-radius: 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--neutral) 20%, transparent);
+    background: var(--card-bg);
+    transition:
+      translate 0.35s var(--ease-out),
+      border-color 0.35s ease,
+      box-shadow 0.35s ease;
+  }
+  @media (hover: hover) {
+    .card:hover {
+      translate: 0 -4px;
+      border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+      box-shadow: 0 24px 48px -24px color-mix(in srgb, var(--primary) 45%, transparent);
+    }
+  }
+
+  /* Sitios web: el logo se inclina un poco al pasar por la fila. */
+  .site-logo {
+    transition:
+      scale 0.3s var(--ease-out),
+      rotate 0.3s var(--ease-out);
+  }
+  .site-row:hover .site-logo {
+    scale: 1.08;
+    rotate: -4deg;
+  }
+
+  /* Título de sección con una barra de acento que crece al entrar. */
+  .section-title::before {
+    content: "";
+    display: block;
+    width: 2.5rem;
+    height: 3px;
+    margin-bottom: 0.75rem;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transform-origin: left;
+  }
+
+  /* Portada del modal de demo: 16:9 fijo (sin CLS) y zoom suave al hover. */
+  .demo-poster {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--neutral) 10%, transparent);
+  }
+  .demo-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: scale 0.6s var(--ease-out);
+  }
+  .demo-poster::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent 55%);
+  }
+  .demo-poster:hover img {
+    scale: 1.04;
+  }
+  .demo-poster-cta {
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 1;
+  }
+  .demo-poster:hover .demo-poster-cta {
+    translate: 0 -2px;
+  }
+
+  /* <dialog> nativo. Preflight pone margin: 0 a todo: hay que devolverle el
+     `margin: auto` que lo centra. Entrada y salida con @starting-style y
+     `allow-discrete` (display y overlay), sin JavaScript. */
+  .demo-dialog {
+    width: min(100% - 2rem, 64rem);
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
+    border: 1px solid color-mix(in srgb, var(--neutral) 25%, transparent);
+    border-radius: 1rem;
+    background: var(--card-bg);
+    color: var(--foreground);
+    box-shadow: 0 32px 80px -24px rgb(0 0 0 / 0.6);
+    opacity: 0;
+    translate: 0 1.5rem;
+    scale: 0.98;
+    transition:
+      opacity 0.3s ease,
+      translate 0.4s var(--ease-out),
+      scale 0.4s var(--ease-out),
+      overlay 0.4s allow-discrete,
+      display 0.4s allow-discrete;
+  }
+  .demo-dialog[open] {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+  .demo-dialog::backdrop {
+    background: rgb(0 0 0 / 0);
+    transition:
+      background-color 0.3s ease,
+      overlay 0.4s allow-discrete,
+      display 0.4s allow-discrete;
+  }
+  .demo-dialog[open]::backdrop {
+    background: rgb(0 0 0 / 0.75);
+  }
+  @starting-style {
+    .demo-dialog[open] {
+      opacity: 0;
+      translate: 0 1.5rem;
+      scale: 0.98;
+    }
+    .demo-dialog[open]::backdrop {
+      background: rgb(0 0 0 / 0);
+    }
+  }
+
+  /* Hero: dos halos que derivan despacio y una retícula que se desvanece.
+     Solo transform (compuesto en GPU); los halos son degradados, sin filter. */
+  .hero-glow::before,
+  .hero-glow::after {
+    content: "";
+    position: absolute;
+    width: 55vmax;
+    height: 55vmax;
+    border-radius: 50%;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .hero-glow::before {
+    top: -20vmax;
+    right: -15vmax;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--primary) 22%, transparent), transparent);
+  }
+  .hero-glow::after {
+    bottom: -28vmax;
+    left: -20vmax;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 14%, transparent), transparent);
+    animation-delay: -9s;
+  }
+  .hero-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--neutral) 12%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--neutral) 12%, transparent) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 60% 55% at 50% 45%, #000 20%, transparent 75%);
+  }
+  .text-gradient {
+    background: linear-gradient(100deg, var(--primary), var(--accent));
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Marco del retrato: un degradado cónico que gira detrás (solo rotate). */
+  .portrait-frame {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 1.25rem;
+    padding: 3px;
+    box-shadow: 0 30px 80px -30px color-mix(in srgb, var(--primary) 55%, transparent);
+  }
+  .portrait-frame::before {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    z-index: -1;
+    background: conic-gradient(var(--primary), var(--accent), transparent 35%, transparent 65%, var(--primary));
+    animation: spin 10s linear infinite;
   }
 
   /* Navbar: el fondo se define con la variable de tema.
@@ -208,6 +451,50 @@
   }
 }
 
+/* Con el modal abierto, la página de fondo no hace scroll. */
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+   Movimiento ligado al scroll, solo si el navegador lo soporta y el usuario no
+   pidió menos movimiento. Sin soporte (p. ej. Firefox) todo se ve estático y
+   completo: no hay JavaScript ni IntersectionObserver de por medio.
+
+   `.reveal` marca piezas sueltas (tarjetas, filas). Dentro de una sección, los
+   hijos directos que no contienen piezas `.reveal` se revelan como bloque.
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal,
+    .reveal-auto > :not(:has(.reveal)) {
+      animation: reveal var(--ease-out) both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+    .section-title::before {
+      animation: grow-x var(--ease-out) both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 35%;
+    }
+  }
+
+  /* Cambio de idioma (/ <-> /en es una navegación completa): fundido nativo. */
+  @view-transition {
+    navigation: auto;
+  }
+
+  /* Cambio de tema: ThemeToggle añade .theme-vt y las coordenadas del clic. */
+  :root.theme-vt::view-transition-old(root),
+  :root.theme-vt::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+  :root.theme-vt::view-transition-new(root) {
+    animation: theme-reveal 0.6s var(--ease-out);
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Accesibilidad: quien pide menos movimiento no ve ninguna animación,
    pero sí ve todo el contenido.
@@ -224,7 +511,6 @@
     transition-duration: 0.01ms !important;
   }
   .anim-up,
-  .anim-in,
   .anim-scale {
     opacity: 1 !important;
     transform: none !important;

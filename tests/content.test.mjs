@@ -192,6 +192,23 @@ describe('estructura de la página', () => {
     assert.deepEqual(ids, SECTIONS.map((s) => s.id));
   });
 
+  test('logos de los sitios y media de los proyectos existen en public/', () => {
+    const paths = [
+      ...content.websites.map((w) => w.logo),
+      ...content.projects.flatMap((p) => [p.media?.poster, ...(p.media?.images ?? []).map((i) => i.src)]),
+    ].filter(Boolean);
+    // Misma mayúscula que en disco: Windows no las distingue, Cloudflare sí.
+    const missing = paths.filter((p) => {
+      const [dir, file] = [p.slice(0, p.lastIndexOf('/') + 1), p.split('/').pop()];
+      try {
+        return !readdirSync(new URL(`public${dir}`, root)).includes(file);
+      } catch {
+        return true;
+      }
+    });
+    assert.deepEqual(missing, []);
+  });
+
   // Windows no distingue mayúsculas, Cloudflare sí.
   test('OG_IMAGE existe en public/ con la misma mayúscula y sus medidas', () => {
     const parts = OG_IMAGE.url.split('/').filter(Boolean);
@@ -249,7 +266,7 @@ describe('fidelidad al JSON de Sebas', { skip: !process.env.CV_JSON && 'define C
       content.projects.map((p) => ({
         nombre: p.title,
         stack: p.technologies,
-        enlaces: [p.links.demo, p.links.app, p.links.video].filter(Boolean),
+        enlaces: [p.links.demo, p.links.app, p.media?.video].filter(Boolean),
         acceso: Boolean(p.access),
       })),
       cv.proyectos.map((p) => ({

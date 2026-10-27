@@ -134,14 +134,22 @@ Deliberadas; conviene no revertirlas sin medir:
 
 - **Un solo acento de color y contraste AA** en los dos temas (ratios anotados al principio
   de `globals.css`). El texto sobre `bg-primary` usa siempre `text-on-primary`.
-- **Sin librería de animación ni revelados al hacer scroll.** La única animación es la
-  entrada del Hero (`@keyframes`), y `prefers-reduced-motion` la desactiva.
+- **Movimiento solo con CSS, sin librerías.** Revelados al hacer scroll con scroll-driven
+  animations (`.reveal`, `.reveal-auto`), fundido nativo al cambiar de idioma
+  (`@view-transition`), círculo al cambiar de tema (`startViewTransition`), `<dialog>` con
+  `@starting-style`. Sin soporte o con `prefers-reduced-motion` todo se ve estático.
+  Solo se animan transform/opacity: CLS 0.
 - **Componentes de servidor por defecto.** Sólo son `'use client'` `Navbar`,
-  `ThemeToggle`, `LanguageToggle`, `ProjectVideo` y `ContactForm`.
+  `ThemeToggle`, `LanguageToggle`, `ProjectDemo` y `ContactForm`.
 - **`content-visibility: auto`** en las secciones (`.section-defer`). Crea un bloque
-  contenedor para `position: fixed`, por eso el modal del vídeo va en un portal a `<body>`.
-- **Vídeo de demo de SEBSBOT** remoto: no se descarga hasta que la tarjeta se acerca al
-  viewport, y en móvil o con ahorro de datos sólo al pulsar play.
+  contenedor para `position: fixed`: los overlays van en un `<dialog>` modal (capa superior)
+  o en un portal a `<body>`.
+- **Demos de proyectos** en `projects[].media` (`poster`, `video`, `images`): botón "Ver demo"
+  y `<dialog>` nativo. El vídeo remoto de SEBSBOT solo se descarga al abrir el modal. Las
+  capturas van en WebP 16:9 en `public/images/proyectos/`.
+- **Logos de los sitios** en `websites[].logo`: sacados del HTML de cada sitio (logo del
+  header, favicon SVG o apple-touch-icon), recortados a 96x96 en WebP (o el SVG limpio) en
+  `public/images/sitios/`. Los asserts exigen uno por sitio y `npm test` comprueba el fichero.
 - **Menú móvil accesible**: al abrirlo, `main` y `footer` quedan `inert`, el foco va al
   primer enlace y Escape lo devuelve al botón.
 - **Fuentes vía `next/font`**, servidas desde el propio dominio.

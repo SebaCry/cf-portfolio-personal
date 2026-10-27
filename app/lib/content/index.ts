@@ -62,6 +62,20 @@ for (const project of content.projects) {
     problems.push(`sameCodeAs de ${project.id} debe apuntar a un proyecto que le apunte de vuelta`);
 }
 
+// Rutas locales: que el fichero exista lo comprueba `npm test` (aquí no hay `fs`).
+for (const site of content.websites)
+  if (!/^\/images\/sitios\/[a-z0-9-]+\.(svg|webp)$/.test(site.logo ?? ''))
+    problems.push(`${site.name}: falta el logo (/images/sitios/<slug>.svg|webp)`);
+for (const { id, media } of content.projects) {
+  if (!media) continue;
+  const local = [media.poster, ...(media.images ?? []).map((image) => image.src)];
+  for (const src of local)
+    if (src !== undefined && !/^\/images\/proyectos\/[a-z0-9-]+\.webp$/.test(src))
+      problems.push(`${id}: ${src} debe ser /images/proyectos/<nombre>.webp`);
+  if (!media.video && !media.images?.length)
+    problems.push(`${id}: media sin vídeo ni capturas (el modal quedaría vacío)`);
+}
+
 for (const [locale, text] of Object.entries(content.profile.metaDescription))
   if (text.length > 160)
     problems.push(`metaDescription.${locale}: ${text.length} > 160 caracteres`);

@@ -21,11 +21,11 @@ export function Section({
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-16">
         <h2
           id={`${id}-title`}
-          className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl lg:sticky lg:top-28 lg:self-start"
+          className="section-title text-2xl font-semibold tracking-tight text-foreground sm:text-3xl lg:sticky lg:top-28 lg:self-start"
         >
           {title}
         </h2>
-        <div className="min-w-0">{children}</div>
+        <div className="reveal-auto min-w-0">{children}</div>
       </div>
     </section>
   );
@@ -50,7 +50,7 @@ export function Chips({ items, label }: { items: string[]; label?: string }) {
 /** Fila de línea de tiempo: periodo a la izquierda, detalle a la derecha. */
 export function PeriodRow({ period, children }: { period: string; children: ReactNode }) {
   return (
-    <li className="grid gap-1 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-6">
+    <li className="reveal grid gap-1 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-6">
       <p className="text-sm text-neutral-variant tabular-nums sm:pt-1">{period}</p>
       <div>{children}</div>
     </li>
@@ -71,7 +71,7 @@ export function ExternalLink({
     <a href={href} target="_blank" rel="noopener noreferrer" className="link">
       {children}
       {srSuffix && <span className="sr-only"> {srSuffix}</span>}
-      <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+      <ArrowUpRight className="arrow-nudge h-4 w-4" aria-hidden="true" />
     </a>
   );
 }
@@ -94,7 +94,7 @@ export function SocialLinks() {
               ? {}
               : { target: '_blank', rel: 'noopener noreferrer' })}
             aria-label={label}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-neutral/25 text-neutral-variant transition-colors hover:border-primary hover:text-primary"
+            className="lift inline-flex h-11 w-11 items-center justify-center rounded-lg border border-neutral/25 text-neutral-variant hover:border-primary hover:text-primary"
           >
             <Icon className="h-5 w-5" aria-hidden="true" />
           </a>
