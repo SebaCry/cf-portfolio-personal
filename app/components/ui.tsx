@@ -2,31 +2,61 @@ import { ArrowUpRight, Github, Linkedin, Mail } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { content } from '../lib/content';
 
-/** Sección con el título fijo a la izquierda en escritorio, como un CV. */
+/**
+ * Sección de la página. Dos moldes, para que no todas pesen igual:
+ * - 'stage': título grande arriba y el contenido a todo el ancho (el trabajo).
+ * - 'aside': título fijo a la izquierda en escritorio, como un CV (listas densas).
+ *
+ * `raised` pinta la banda con el color de tarjeta: las secciones alternan fondo.
+ * Dentro de una banda, `bg-surface` pasa a ser el fondo base (`.raised` en
+ * globals.css), así las tarjetas siempre se distinguen de lo que las rodea.
+ */
 export function Section({
   id,
   title,
+  intro,
+  layout = 'stage',
+  raised = false,
   children,
 }: {
   id: string;
   title: string;
+  intro?: string;
+  layout?: 'stage' | 'aside';
+  raised?: boolean;
   children: ReactNode;
 }) {
+  const heading = { id: `${id}-title`, className: 'display font-bold tracking-[-0.02em] text-foreground' };
+
   return (
     <section
       id={id}
       aria-labelledby={`${id}-title`}
-      className="section-defer border-t border-neutral/15 px-6 py-20 sm:px-10 lg:py-24"
+      className={`section-defer px-6 py-16 sm:px-10 lg:py-24 ${
+        raised ? 'raised border-y border-neutral/15 bg-card-bg' : ''
+      }`}
     >
-      <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-16">
-        <h2
-          id={`${id}-title`}
-          className="section-title text-2xl font-semibold tracking-tight text-foreground sm:text-3xl lg:sticky lg:top-28 lg:self-start"
-        >
-          {title}
-        </h2>
-        <div className="reveal-auto min-w-0">{children}</div>
-      </div>
+      {layout === 'stage' ? (
+        <div className="mx-auto max-w-6xl">
+          <h2 {...heading} className={`${heading.className} text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95]`}>
+            {title}
+          </h2>
+          {intro && (
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-neutral-variant">{intro}</p>
+          )}
+          <div className="mt-10">{children}</div>
+        </div>
+      ) : (
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-16">
+          <h2
+            {...heading}
+            className={`${heading.className} text-4xl leading-none sm:text-5xl lg:sticky lg:top-28 lg:self-start`}
+          >
+            {title}
+          </h2>
+          <div className="min-w-0">{children}</div>
+        </div>
+      )}
     </section>
   );
 }
@@ -50,7 +80,7 @@ export function Chips({ items, label }: { items: string[]; label?: string }) {
 /** Fila de línea de tiempo: periodo a la izquierda, detalle a la derecha. */
 export function PeriodRow({ period, children }: { period: string; children: ReactNode }) {
   return (
-    <li className="reveal grid gap-1 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-6">
+    <li className="grid gap-1 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-6">
       <p className="text-sm text-neutral-variant tabular-nums sm:pt-1">{period}</p>
       <div>{children}</div>
     </li>

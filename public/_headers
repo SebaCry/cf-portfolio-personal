@@ -17,3 +17,8 @@
 /images/*
   Cache-Control: public, max-age=31536000, immutable
 
+# Reels y sus pósters: misma regla que las imágenes (si cambias uno, cámbiale
+# el nombre). Workers Assets admite hasta 25 MiB por archivo.
+/reels/*
+  Cache-Control: public, max-age=31536000, immutable
+

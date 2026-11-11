@@ -37,14 +37,14 @@ function ProjectCard({ project, dict, locale }: Props & { project: Project }) {
   return (
     <article
       id={`proyecto-${project.id}`}
-      className={`card reveal scroll-mt-28 p-5 sm:p-6 ${
+      className={`card scroll-mt-28 rounded-2xl bg-surface p-5 sm:p-6 ${
         poster ? 'grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-center' : ''
       }`}
     >
       {poster && demoButton}
 
       <div>
-        <h3 className="text-xl font-semibold text-foreground sm:text-2xl">{project.title}</h3>
+        <h3 className="display text-2xl font-bold text-foreground">{project.title}</h3>
         {project.description && (
           <p className="mt-2 leading-relaxed text-neutral-variant">{project.description[locale]}</p>
         )}
@@ -89,7 +89,7 @@ export default function Projects({ dict, locale }: Props) {
   const shared = content.projects.filter((project) => project.sameCodeAs);
 
   return (
-    <Section id="projects" title={dict.nav.projects}>
+    <Section id="projects" title={dict.nav.projects} raised>
       <div className="space-y-6">
         {content.projects.map((project) => {
           if (!project.sameCodeAs) {
@@ -102,7 +102,7 @@ export default function Projects({ dict, locale }: Props) {
               key="shared"
               role="group"
               aria-labelledby="shared-code-title"
-              className="rounded-2xl border border-primary/35 p-3 sm:p-4"
+              className="rounded-3xl border border-dashed border-neutral/40 p-3 sm:p-4"
             >
               <p id="shared-code-title" className="px-2 pt-1 pb-4 font-medium text-foreground">
                 {dict.projects.sharedTitle}

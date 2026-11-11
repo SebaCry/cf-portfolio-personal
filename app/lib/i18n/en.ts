@@ -9,20 +9,17 @@ export const en: Dictionary = {
 
   nav: {
     home: 'Home',
-    about: 'About',
-    experience: 'Experience',
     projects: 'Projects',
+    video: 'Video',
     websites: 'Websites',
-    skills: 'Skills',
-    education: 'Education',
+    profile: 'Profile',
     contact: 'Contact',
     hire: 'Hire me',
     mainNav: 'Main navigation',
     mobileNav: 'Mobile navigation',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
-    toLight: 'Switch to light mode',
-    toDark: 'Switch to dark mode',
+    lightMode: 'Light mode',
     switchLanguage: 'Change language',
     languageName: 'English',
   },
@@ -30,15 +27,20 @@ export const en: Dictionary = {
   hero: {
     sectionLabel: 'Introduction',
     ctaProjects: 'View projects',
-    ctaContact: 'Get in touch',
     portraitAlt: (name: string) => `Portrait of ${name}`,
+    proofs: 'Featured work',
   },
 
   period: {
     present: 'Present',
   },
 
-  experience: {
+  profile: {
+    about: 'About',
+    experience: 'Experience',
+    education: 'Education',
+    skills: 'Skills',
+    languages: 'Languages',
     site: 'Website',
   },
 
@@ -56,12 +58,30 @@ export const en: Dictionary = {
     close: 'Close',
   },
 
-  websites: {
-    stack: 'Stack',  },
+  video: {
+    title: 'Video made with code',
+    circuit: 'The circuit, step by step',
+    pipeline: 'How a reel gets made',
+    codeToVideo: 'From code to video',
+    howItWorks: 'See how it gets made',
+    codeHint: 'The video reads this file. Tap a line to jump to that moment.',
+    frame: 'frame',
+    gate: 'Gate',
+    waiting: 'Waiting for my approval',
+    approved: 'Approved',
+    auto: 'Runs on its own',
+    parallel: 'In parallel',
+    output: 'Output',
+    pause: 'Pause the animation',
+    play: 'Play the animation',
+    watch: (title: string) => `Watch the reel "${title}"`,
+    reelVideo: (title: string) => `Reel "${title}"`,
+    langName: { es: 'in Spanish', en: 'in English' },
+    close: 'Close',
+  },
 
-  skills: {
-    technical: 'Technical',
-    languages: 'Languages',
+  websites: {
+    stack: 'Stack',
   },
 
   contact: {

@@ -13,10 +13,15 @@ const FULL_NAME: Record<Locale, string> = { es: 'Español', en: 'English' };
 export default function LanguageToggle({
   locale,
   label,
+  section,
 }: {
   locale: Locale;
   label: string;
+  /** Sección visible (la calcula Navbar): al cambiar de idioma se vuelve a ella. */
+  section?: string;
 }) {
+  const hash = section && section !== 'hero' ? `#${section}` : '';
+
   return (
     <div
       role="group"
@@ -28,7 +33,8 @@ export default function LanguageToggle({
           <span
             key={code}
             aria-current="true"
-            className="rounded-full bg-primary px-2.5 py-1 text-on-primary"
+            // 44 px de alto en táctil; compacto en la barra de escritorio.
+            className="inline-flex min-h-11 items-center rounded-full bg-primary px-2.5 text-on-primary lg:min-h-0 lg:py-1"
           >
             {LABEL[code]}
             <span className="sr-only"> — {FULL_NAME[code]}</span>
@@ -36,9 +42,9 @@ export default function LanguageToggle({
         ) : (
           <a
             key={code}
-            href={localePath(code)}
+            href={`${localePath(code)}${hash}`}
             hrefLang={code}
-            className="rounded-full px-2.5 py-1 text-neutral-variant transition-colors hover:text-foreground"
+            className="inline-flex min-h-11 items-center rounded-full px-2.5 text-neutral-variant transition-colors hover:text-foreground lg:min-h-0 lg:py-1"
           >
             {LABEL[code]}
             <span className="sr-only"> — {FULL_NAME[code]}</span>

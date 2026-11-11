@@ -47,7 +47,7 @@ export default function ProjectDemo({ poster, video, images = [], labels }: Prop
       {poster ? (
         <button type="button" onClick={open} className="demo-poster group/poster">
           {/* Decorativa: el nombre del botón es su texto. 16:9 fijo, sin CLS. */}
-          {/* eslint-disable-next-line @next/next/no-img-element -- WebP ya optimizado; next/image solo en el Hero */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- WebP ya optimizado; ya a su tamaño; next/image en Workers sirve el original */}
           <img src={poster} alt="" width={960} height={540} loading="lazy" decoding="async" />
           <span className="btn-primary demo-poster-cta">{trigger}</span>
         </button>
@@ -101,7 +101,7 @@ export default function ProjectDemo({ poster, video, images = [], labels }: Prop
             >
               {images.map((image) => (
                 <li key={image.src} className="w-full shrink-0 snap-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- WebP ya optimizado; next/image solo en el Hero */}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- WebP ya optimizado; ya a su tamaño; next/image en Workers sirve el original */}
                   <img
                     src={image.src}
                     alt={image.alt}

@@ -9,7 +9,10 @@ import type { Dictionary } from './i18n/es';
  */
 export const SITE_URL = 'https://sebasperez.cc';
 
-/** Retrato del Hero y tarjeta de Open Graph. */
+/** Retrato pequeño del Hero: webp de 112 px (2x de 56). 1,5 KB contra 154 KB del PNG. */
+export const AVATAR = '/images/avatar.webp';
+
+/** Tarjeta de Open Graph (el retrato en PNG). */
 export const OG_IMAGE = {
   url: '/images/image.png',
   width: 400,
@@ -18,11 +21,9 @@ export const OG_IMAGE = {
 
 /** Secciones de la página, en orden. Las comparten Navbar y Footer. */
 export const SECTIONS = [
-  { id: 'about', label: 'about' },
-  { id: 'experience', label: 'experience' },
   { id: 'projects', label: 'projects' },
+  { id: 'video', label: 'video' },
   { id: 'websites', label: 'websites' },
-  { id: 'skills', label: 'skills' },
-  { id: 'education', label: 'education' },
+  { id: 'profile', label: 'profile' },
   { id: 'contact', label: 'contact' },
 ] as const satisfies readonly { id: string; label: keyof Dictionary['nav'] }[];

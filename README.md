@@ -25,6 +25,7 @@ no esté ahí (nada de cifras inventadas ni porcentajes de habilidades).
 | Qué                                                            | Archivo                         |
 | -------------------------------------------------------------- | ------------------------------- |
 | Perfil, contacto, experiencia, proyectos, sitios web, formación, habilidades e idiomas | `app/lib/content/portfolio.ts` |
+| Video con código: SEBSMEDIA, reels, sus pipelines y el guion del reel destacado (clave `video`) | `app/lib/content/portfolio.ts` + `public/reels/` |
 | Forma del contenido (tipos)                                    | `app/lib/content/schema.ts`     |
 | Validaciones que tumban el build                               | `app/lib/content/index.ts`      |
 | Texto de interfaz (menú, botones, etiquetas) en español        | `app/lib/i18n/es.ts`            |
@@ -52,6 +53,23 @@ Si algo no cuadra, **`npm run build` falla** y lista todos los problemas a la ve
 
 Privacidad: solo se publica el primer teléfono, y no va en el JSON-LD. Las referencias
 (teléfonos de terceros) no se publican; la página dice que están disponibles a solicitud.
+
+### Añadir un reel
+
+Los vídeos van en `public/reels/` comprimidos para la web (720 × 1280, ~2-6 MB; Workers
+Assets no admite archivos de más de 25 MiB), con un póster webp del mismo nombre:
+
+```bash
+ffmpeg -i original.mp4 -vf "scale=720:1280:flags=lanczos,fps=30" -c:v libx264 -preset slow \
+  -crf 26 -profile:v high -pix_fmt yuv420p -c:a aac -b:a 96k -ac 2 -movflags +faststart \
+  public/reels/<id>.mp4
+ffmpeg -ss <segundo> -i original.mp4 -frames:v 1 -vf "scale=432:768:flags=lanczos" \
+  -c:v libwebp -quality 72 public/reels/<id>.webp
+```
+
+Luego una entrada en `video.studio.reels` o `video.clients.reels` de `portfolio.ts`.
+`npm test` falla si el archivo o el póster no existen con esa misma mayúscula. Si un
+vídeo se reemplaza, cámbiale el nombre: `/reels/*` se cachea un año como `immutable`.
 
 `SITE_URL` en `app/lib/site.ts` alimenta el canonical, el `sitemap.xml`, el `robots.txt`
 y el JSON-LD. Si cambias de dominio, es el único sitio donde hay que tocarlo.
@@ -93,9 +111,19 @@ del bundle) sólo aparecen ahí.
    mientras `open-next.config.ts` no configure caché incremental.
 4. **Nada de `fs` ni APIs exclusivas de Node** en módulos que acaban en el Worker
    (incluido `app/lib/content/`): `fs` no existe en workerd.
-5. **`next/image`**: solo lo usa el retrato del Hero y está comprobado en `npm run
-   preview`. Cualquier imagen nueva con `next/image` hay que verificarla ahí antes de
-   desplegar.
+5. **Sin `next/image`.** En Workers, sin un binding de imágenes, `/_next/image` devuelve el
+   archivo original sin redimensionar (en preview, el PNG de 154 KB para un avatar de
+   56 px). Las imágenes van como webp ya a su tamaño en `public/` con `<img>`. Si algún
+   día se usa `next/image`, hay que mirar en `npm run preview` cuánto pesa lo que sirve.
+6. **Los vídeos de `/reels/*` pasan por `worker/index.mjs`.** El binding `ASSETS` ignora
+   la cabecera `Range` y siempre contesta 200 con el archivo entero, y Safari (iPhone y
+   Mac) no reproduce un vídeo así. Por eso `wrangler.jsonc` apunta `main` a
+   `worker/index.mjs`, que envuelve `.open-next/worker.js` y, solo para `/reels/*`
+   (`assets.run_worker_first`), contesta 206 con el trozo pedido. Lo comprueba
+   `tests/range.test.mjs`; en `npm run preview`:
+   `curl -H "Range: bytes=0-1" -I localhost:8787/reels/glam-urban.mp4` debe dar 206.
+   La demo de SEBSBOT (`sebsbot-demo…workers.dev/video.mp4`) tiene el mismo problema y
+   vive en otro worker.
 
 ### www
 
@@ -130,17 +158,46 @@ hasta que lo hagas) y crea `app/(fr)/fr/page.tsx` con su layout.
 
 ## Decisiones de diseño y rendimiento
 
-Deliberadas; conviene no revertirlas sin medir:
+Deliberadas; conviene no revertirlas sin medir. Salen del análisis del 2026-11-11 (cuatro
+revisiones: estrategia UX, dirección de arte, interacción y la mirada de quien visita).
 
-- **Un solo acento de color y contraste AA** en los dos temas (ratios anotados al principio
-  de `globals.css`). El texto sobre `bg-primary` usa siempre `text-on-primary`.
-- **Movimiento solo con CSS, sin librerías.** Revelados al hacer scroll con scroll-driven
-  animations (`.reveal`, `.reveal-auto`), fundido nativo al cambiar de idioma
-  (`@view-transition`), círculo al cambiar de tema (`startViewTransition`), `<dialog>` con
-  `@starting-style`. Sin soporte o con `prefers-reduced-motion` todo se ve estático.
-  Solo se animan transform/opacity: CLS 0.
-- **Componentes de servidor por defecto.** Sólo son `'use client'` `Navbar`,
-  `ThemeToggle`, `LanguageToggle`, `ProjectDemo` y `ContactForm`.
+- **La página les habla a empleadores.** Primero el trabajo: Hero → Proyectos → Video →
+  Sitios web → Perfil (sobre mí, experiencia, formación, habilidades e idiomas juntos) →
+  Contacto. El `h1` es el posicionamiento (`profile.tagline`, elegido por Sebas) y al lado
+  van tres pruebas (`highlights`) que llevan a su proyecto. Pasó de ~11 a ~7 pantallas en
+  escritorio.
+- **Un solo acento verde** (lo eligió Sebas) sobre grafito con un toque de verde; nada más
+  lleva color. Las puertas que esperan aprobación van con contorno y un punto que parpadea;
+  lo aprobado, en verde sólido con ✓ (`primary` y `approved` son tokens aparte, hoy con el
+  mismo verde). Contraste AA en los dos temas; `npm test` recalcula los ratios desde
+  `globals.css`.
+- **Dos moldes de sección** (`Section` en `ui.tsx`): `stage` (título grande y angosto arriba)
+  y `aside` (título a la izquierda, tipo CV), con bandas que alternan fondo (`raised`). Las
+  tarjetas usan `bg-surface`, que se invierte dentro de una banda.
+- **Titulares angostos con la misma fuente**: Bricolage Grotesque variable con su eje
+  `wdth` (clase `.display`); ninguna familia nueva.
+- **Sin librería de animación ni revelados al hacer scroll.** El PR #2 los había añadido
+  (`animation-timeline: view()`) y se quitaron al unirlo con el rediseño: esconden el
+  contenido hasta que entra en pantalla y chocan con `content-visibility`. Solo se mueve lo
+  que tiene sentido o responde a una acción: la entrada del Hero y su sello «Aprobado»
+  (`@keyframes`, una vez), la barra de progreso de lectura (CSS `animation-timeline`, sin
+  JS), las microinteracciones al pasar el ratón (del PR #2: botones, tarjetas, flechas,
+  subrayado de enlaces, logos) y los pipelines (`Pipeline.tsx`). Los pipelines solo avanzan
+  en pantalla, tienen botón de pausa, no cambian de alto (cero CLS) y con
+  `prefers-reduced-motion` no arrancan.
+- **View Transitions** (del PR #2): fundido nativo al cambiar de idioma (`@view-transition`)
+  y círculo al cambiar de tema (`startViewTransition`). Con `prefers-reduced-motion`, nada.
+- **Video por capas**: los reels a la vista y el proceso (pipelines y «Del código al
+  video») plegado en `<details>` nativos, sin JS.
+- **Componentes de servidor por defecto.** Sólo declaran `'use client'` `Navbar`,
+  `ThemeToggle`, `ProjectDemo`, `ContactForm`, `VideoDialog`, `Pipeline`, `ScriptSync`
+  y `ReelCard`. `LanguageToggle` no lo declara, pero llega al cliente porque lo importa
+  `Navbar`.
+- **Nada arranca solo con «reducir movimiento», en móvil o con ahorro de datos.** Las
+  tarjetas de reels cargan un webp de ~10-30 KB (`loading="lazy"`); el vídeo se monta al
+  pasar el ratón (mudo) o al hacer clic (modal con sonido). El reel destacado arranca mudo
+  en escritorio al entrar en pantalla y se pausa al salir. La demo de SEBSBOT nunca arranca
+  sola: muestra un cuadro del propio vídeo y el vídeo se carga al abrir su `<dialog>`.
 - **`content-visibility: auto`** en las secciones (`.section-defer`). Crea un bloque
   contenedor para `position: fixed`: los overlays van en un `<dialog>` modal (capa superior)
   o en un portal a `<body>`.

@@ -98,14 +98,20 @@ export default function Navbar({ t, locale, name }: NavbarProps) {
         className="nav-surface fixed top-0 right-0 left-0 z-50 border-b border-transparent"
         data-scrolled={isScrolled}
       >
+        {/* Progreso de lectura: solo CSS (scroll timeline), ver `.scroll-progress`. */}
+        <span
+          aria-hidden="true"
+          className="scroll-progress absolute inset-x-0 -bottom-px h-0.5 bg-primary"
+        />
         <nav aria-label={t.mainNav} className="mx-auto max-w-6xl px-6 sm:px-10">
           <div className="flex h-16 items-center justify-between gap-6">
             <a href="#hero" className="font-semibold tracking-tight whitespace-nowrap text-foreground">
               {name}
             </a>
 
-            {/* gap-5 y nowrap: con gap-6 la fila no cabe en 1072px y "Sobre mí" se parte en dos líneas. */}
-            <div className="hidden items-center gap-5 whitespace-nowrap xl:flex">
+            {/* Con 5 secciones la fila cabe desde lg (944px útiles). Si añades una,
+                mide scrollWidth contra clientWidth de esta fila a 1024px. */}
+            <div className="hidden items-center gap-6 whitespace-nowrap lg:flex">
               {SECTIONS.map((section) => (
                 <a
                   key={section.id}
@@ -118,22 +124,22 @@ export default function Navbar({ t, locale, name }: NavbarProps) {
                 </a>
               ))}
 
-              <LanguageToggle locale={locale} label={t.switchLanguage} />
-              <ThemeToggle toLight={t.toLight} toDark={t.toDark} />
+              <LanguageToggle locale={locale} label={t.switchLanguage} section={activeId} />
+              <ThemeToggle label={t.lightMode} />
 
               <a href="#contact" className="btn-primary !px-4 !py-2 text-sm">
                 {t.hire}
               </a>
             </div>
 
-            <div className="flex items-center gap-2 xl:hidden">
-              <LanguageToggle locale={locale} label={t.switchLanguage} />
-              <ThemeToggle toLight={t.toLight} toDark={t.toDark} />
+            <div className="flex items-center gap-2 lg:hidden">
+              <LanguageToggle locale={locale} label={t.switchLanguage} section={activeId} />
+              <ThemeToggle label={t.lightMode} />
               <button
                 ref={menuButtonRef}
                 type="button"
                 onClick={() => setIsMenuOpen((open) => !open)}
-                className="p-2 text-foreground"
+                className="p-2.5 text-foreground"
                 aria-label={isMenuOpen ? t.closeMenu : t.openMenu}
                 aria-expanded={isMenuOpen}
                 aria-controls="mobile-menu"
@@ -149,7 +155,7 @@ export default function Navbar({ t, locale, name }: NavbarProps) {
       <div
         id="mobile-menu"
         hidden={!isMenuOpen}
-        className="fixed inset-0 z-40 bg-background/95 backdrop-blur-lg xl:hidden"
+        className="fixed inset-0 z-40 bg-background/95 backdrop-blur-lg lg:hidden"
       >
         <nav
           aria-label={t.mobileNav}
@@ -161,7 +167,8 @@ export default function Navbar({ t, locale, name }: NavbarProps) {
               ref={index === 0 ? firstLinkRef : undefined}
               href={`#${section.id}`}
               onClick={() => setIsMenuOpen(false)}
-              className="text-2xl font-medium text-neutral-variant transition-colors hover:text-foreground"
+              aria-current={activeId === section.id ? 'true' : undefined}
+              className="display text-4xl font-bold text-neutral-variant transition-colors hover:text-foreground aria-[current=true]:text-primary"
             >
               {t[section.label]}
             </a>

@@ -38,7 +38,7 @@ registerHooks({
 const { content, formatPeriod, tr } = await import('../app/lib/content/index.ts');
 const { getDictionary, locales } = await import('../app/lib/i18n/index.ts');
 const { buildJsonLd } = await import('../app/lib/metadata.ts');
-const { OG_IMAGE, SECTIONS, SITE_URL } = await import('../app/lib/site.ts');
+const { AVATAR, OG_IMAGE, SECTIONS, SITE_URL } = await import('../app/lib/site.ts');
 
 const root = new URL('../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), 'utf8');
@@ -48,6 +48,16 @@ const sourceFiles = (dir) =>
     .filter((f) => /\.(tsx?|css)$/.test(f));
 const appSources = sourceFiles('app/').map((f) => [f, read(f)]);
 const dupes = (list) => list.filter((x, i) => list.indexOf(x) !== i);
+const { video } = content;
+
+/** Comprueba cada tramo de la ruta con readdir: así falla también si solo cambia una mayúscula. */
+function assertInPublic(path) {
+  let dir = new URL('public/', root);
+  for (const part of path.split('/').filter(Boolean)) {
+    assert.ok(readdirSync(dir).includes(part), `no existe ${part} en ${dir.pathname}`);
+    dir = new URL(`${part}/`, dir);
+  }
+}
 
 const URL_KEYS = new Set(['url', 'demo', 'app', 'video', 'linkedin', 'github']);
 const contentUrls = [];
@@ -83,6 +93,15 @@ describe('contenido', () => {
       ...content.projects.map((p) => [`${p.id}.technologies`, p.technologies]),
       ...content.websites.map((w) => [`${w.name}.technologies`, w.technologies]),
       ...content.experience.map((e, i) => [`experience[${i}].technologies`, e.technologies ?? []]),
+      ['video.reels.id', [...video.studio.reels, ...video.clients.reels].map((r) => r.id)],
+      ['video.studio.technologies', video.studio.technologies],
+      ['video.clients.technologies', video.clients.technologies],
+      ['video.studio.circuit', video.studio.circuit.map((s) => s.label.es)],
+      ['video.clients.pipeline', video.clients.pipeline.map((s) => s.label.es)],
+      ...locales.flatMap((l) => {
+        const { lines, keys } = video.clients.featured.script[l];
+        return [[`featured.${l}.lines`, lines.map((x) => x[1])], [`featured.${l}.keys`, keys.map((k) => k.name)]];
+      }),
     ];
     assert.deepEqual(lists.flatMap(([where, list]) => dupes(list).map((x) => `${where}: ${x}`)), []);
   });
@@ -104,7 +123,8 @@ describe('contenido', () => {
       read(f)
         .split('\n')
         .map((line, i) => [line, i])
-        .filter(([line]) => /\b(TODO|FIXME|XXX)\b|lorem ipsum/i.test(line))
+        // TODO en mayúsculas: en minúsculas «todo» es una palabra normal en español.
+        .filter(([line]) => /\b(TODO|FIXME|XXX)\b/.test(line) || /lorem ipsum/i.test(line))
         .map(([line, i]) => `${f}:${i + 1} ${line.trim()}`)
     );
     assert.deepEqual(hits, []);
@@ -198,25 +218,12 @@ describe('estructura de la página', () => {
       ...content.projects.flatMap((p) => [p.media?.poster, ...(p.media?.images ?? []).map((i) => i.src)]),
     ].filter(Boolean);
     // Misma mayúscula que en disco: Windows no las distingue, Cloudflare sí.
-    const missing = paths.filter((p) => {
-      const [dir, file] = [p.slice(0, p.lastIndexOf('/') + 1), p.split('/').pop()];
-      try {
-        return !readdirSync(new URL(`public${dir}`, root)).includes(file);
-      } catch {
-        return true;
-      }
-    });
-    assert.deepEqual(missing, []);
+    for (const path of paths) assertInPublic(path);
   });
 
   // Windows no distingue mayúsculas, Cloudflare sí.
   test('OG_IMAGE existe en public/ con la misma mayúscula y sus medidas', () => {
-    const parts = OG_IMAGE.url.split('/').filter(Boolean);
-    let dir = new URL('public/', root);
-    for (const part of parts) {
-      assert.ok(readdirSync(dir).includes(part), `no existe ${part} en ${dir.pathname}`);
-      dir = new URL(`${part}/`, dir);
-    }
+    assertInPublic(OG_IMAGE.url);
     const buf = readFileSync(new URL(`public${OG_IMAGE.url}`, root));
     assert.equal(buf.subarray(1, 4).toString(), 'PNG');
     assert.deepEqual(
@@ -224,6 +231,82 @@ describe('estructura de la página', () => {
       { width: OG_IMAGE.width, height: OG_IMAGE.height }
     );
   });
+
+  test('las pruebas del Hero llevan a un ancla que existe y sus imágenes están en public/', () => {
+    assert.match(read('app/components/VideoSection.tsx'), /id="sebsmedia"/);
+    const anchors = new Set([...content.projects.map((p) => `#proyecto-${p.id}`), '#sebsmedia']);
+    for (const item of content.highlights) {
+      assert.ok(anchors.has(item.href), `${item.title}: ${item.href} no es un ancla de la página`);
+      if (item.image) assertInPublic(item.image);
+    }
+    assertInPublic(AVATAR);
+  });
+
+  test('los reels y sus pósters existen en public/reels/ con la misma mayúscula', () => {
+    const { featured } = video.clients;
+    const paths = [
+      ...[...video.studio.reels, ...video.clients.reels].flatMap((r) => [r.file, r.poster]),
+      ...locales.flatMap((l) => [featured.file[l], featured.poster[l]]),
+    ];
+    for (const path of paths) {
+      assert.match(path, /^\/reels\/[a-z0-9-]+\.(mp4|webp)$/, path);
+      assertInPublic(path);
+    }
+  });
+
+  // Los tiempos tienen que ir en orden: ScriptSync resalta según el segundo del vídeo.
+  test('guion del reel destacado: frases en orden y dentro de cada una inicio < fin', () => {
+    for (const l of locales) {
+      const { lines, keys } = video.clients.featured.script[l];
+      lines.forEach(([text, start, end], i) => {
+        assert.ok(start < end, `${l}: "${text}" termina antes de empezar`);
+        if (i > 0) assert.ok(start >= lines[i - 1][1], `${l}: "${text}" va antes que la anterior`);
+      });
+      for (const { name, value } of keys)
+        if (Array.isArray(value))
+          assert.deepEqual(value, [...value].sort((a, b) => a - b), `${l}.${name} desordenado`);
+    }
+  });
+});
+
+// globals.css documenta los contrastes; esto los recalcula para que un cambio de
+// color no baje de AA sin que nadie lo note.
+describe('colores (WCAG AA, 4,5:1)', () => {
+  const css = read('app/globals.css');
+  const tokens = (selector) =>
+    Object.fromEntries(
+      [...css.split(`${selector} {`)[1].split('}')[0].matchAll(/--([\w-]+):\s*(#[0-9a-f]{6})\b/gi)].map(
+        (m) => [m[1], m[2]]
+      )
+    );
+  const luminance = (hex) => {
+    const [r, g, b] = [1, 3, 5]
+      .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a, b) => {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+  const PAIRS = [
+    ...['foreground', 'neutral-variant', 'neutral', 'primary', 'approved', 'error'].flatMap((text) => [
+      [text, 'background'],
+      [text, 'card-bg'],
+    ]),
+    ['on-primary', 'primary'],
+    ['on-approved', 'approved'],
+  ];
+
+  for (const [mode, selector] of [['oscuro', ':root'], ['claro', ':root.light']]) {
+    test(`modo ${mode}`, () => {
+      const c = tokens(selector);
+      const bad = PAIRS.filter(([a, b]) => !(ratio(c[a], c[b]) >= 4.5)).map(
+        ([a, b]) => `${a} sobre ${b}: ${c[a] && c[b] ? ratio(c[a], c[b]).toFixed(2) : 'falta el token'}`
+      );
+      assert.deepEqual(bad, []);
+    });
+  }
 });
 
 describe('fidelidad al JSON de Sebas', { skip: !process.env.CV_JSON && 'define CV_JSON=<ruta a cv.json>' }, () => {

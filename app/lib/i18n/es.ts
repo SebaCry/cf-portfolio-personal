@@ -14,20 +14,18 @@ export const es = {
 
   nav: {
     home: 'Inicio',
-    about: 'Sobre mí',
-    experience: 'Experiencia',
     projects: 'Proyectos',
+    video: 'Video',
     websites: 'Sitios web',
-    skills: 'Habilidades',
-    education: 'Formación',
+    profile: 'Perfil',
     contact: 'Contacto',
     hire: 'Contrátame',
     mainNav: 'Navegación principal',
     mobileNav: 'Navegación móvil',
     openMenu: 'Abrir menú',
     closeMenu: 'Cerrar menú',
-    toLight: 'Cambiar a modo claro',
-    toDark: 'Cambiar a modo oscuro',
+    // Etiqueta fija + aria-pressed: el estado lo anuncia el lector, no el texto.
+    lightMode: 'Modo claro',
     switchLanguage: 'Cambiar idioma',
     languageName: 'Español',
   },
@@ -35,15 +33,20 @@ export const es = {
   hero: {
     sectionLabel: 'Presentación',
     ctaProjects: 'Ver proyectos',
-    ctaContact: 'Contactar',
     portraitAlt: (name: string) => `Retrato de ${name}`,
+    proofs: 'Trabajo destacado',
   },
 
   period: {
     present: 'Actualidad',
   },
 
-  experience: {
+  profile: {
+    about: 'Sobre mí',
+    experience: 'Experiencia',
+    education: 'Formación',
+    skills: 'Habilidades',
+    languages: 'Idiomas',
     site: 'Sitio web',
   },
 
@@ -61,12 +64,30 @@ export const es = {
     close: 'Cerrar',
   },
 
-  websites: {
-    stack: 'Tecnologías',  },
+  video: {
+    title: 'Video con código',
+    circuit: 'El circuito, paso a paso',
+    pipeline: 'Cómo se hace un reel',
+    codeToVideo: 'Del código al video',
+    howItWorks: 'Ver cómo se hace',
+    codeHint: 'El video lee este archivo. Toca una línea para saltar a ese momento.',
+    frame: 'cuadro',
+    gate: 'Puerta',
+    waiting: 'Espera mi aprobación',
+    approved: 'Aprobado',
+    auto: 'Sigue sola',
+    parallel: 'En paralelo',
+    output: 'Salida',
+    pause: 'Pausar la animación',
+    play: 'Reproducir la animación',
+    watch: (title: string) => `Ver el reel «${title}»`,
+    reelVideo: (title: string) => `Reel «${title}»`,
+    langName: { es: 'en español', en: 'en inglés' },
+    close: 'Cerrar',
+  },
 
-  skills: {
-    technical: 'Técnicas',
-    languages: 'Idiomas',
+  websites: {
+    stack: 'Tecnologías',
   },
 
   contact: {
