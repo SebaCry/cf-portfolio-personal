@@ -21,6 +21,7 @@ export const SECTIONS = [
   { id: 'about', label: 'about' },
   { id: 'experience', label: 'experience' },
   { id: 'projects', label: 'projects' },
+  { id: 'video', label: 'video' },
   { id: 'websites', label: 'websites' },
   { id: 'skills', label: 'skills' },
   { id: 'education', label: 'education' },

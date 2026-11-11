@@ -104,8 +104,9 @@ export default function Navbar({ t, locale, name }: NavbarProps) {
               {name}
             </a>
 
-            {/* gap-5 y nowrap: con gap-6 la fila no cabe en 1072px y "Sobre mí" se parte en dos líneas. */}
-            <div className="hidden items-center gap-5 whitespace-nowrap xl:flex">
+            {/* gap-4 y nowrap: la fila tiene 1072px. Con 8 secciones, gap-5 se pasa ~31px
+                y gap-6 parte "Sobre mí" en dos líneas. Si añades una sección, mídela. */}
+            <div className="hidden items-center gap-4 whitespace-nowrap xl:flex">
               {SECTIONS.map((section) => (
                 <a
                   key={section.id}

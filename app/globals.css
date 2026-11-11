@@ -74,8 +74,34 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Keyframes: solo la entrada del Hero y el modal del vídeo.
+   Keyframes: la entrada del Hero, el modal del vídeo y los pipelines de la
+   sección de video (pulso de la estación activa, salida que se "escribe",
+   punto que parpadea en una puerta).
 --------------------------------------------------------------------------- */
+@keyframes pulse-ring {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 55%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--primary) 0%, transparent);
+  }
+}
+
+@keyframes reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -130,6 +156,18 @@
   }
   .anim-scale {
     animation: scale-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Pipelines (Pipeline.tsx). Con "reducir movimiento", la regla del final las
+     deja en su estado final: sin pulso y con el texto entero a la vista. */
+  .pulse-ring {
+    animation: pulse-ring 1.3s ease-out infinite;
+  }
+  .reveal {
+    animation: reveal 0.9s steps(30, end) both;
+  }
+  .blink {
+    animation: blink 1s steps(1) infinite;
   }
 
   /* Botones. El texto sobre primary usa --on-primary, nunca blanco fijo. */

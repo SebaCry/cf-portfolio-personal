@@ -9,6 +9,7 @@ import Hero from './Hero';
 import Navbar from './Navbar';
 import Projects from './Projects';
 import Skills from './Skills';
+import VideoSection from './VideoSection';
 import Websites from './Websites';
 
 /**
@@ -28,6 +29,7 @@ export default function HomePage({ locale }: { locale: Locale }) {
         <About dict={dict} locale={locale} />
         <Experience dict={dict} locale={locale} />
         <Projects dict={dict} locale={locale} />
+        <VideoSection dict={dict} locale={locale} />
         <Websites dict={dict} />
         <Skills dict={dict} locale={locale} />
         <Education dict={dict} locale={locale} />

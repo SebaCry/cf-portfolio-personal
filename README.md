@@ -25,6 +25,7 @@ no esté ahí (nada de cifras inventadas ni porcentajes de habilidades).
 | Qué                                                            | Archivo                         |
 | -------------------------------------------------------------- | ------------------------------- |
 | Perfil, contacto, experiencia, proyectos, sitios web, formación, habilidades e idiomas | `app/lib/content/portfolio.ts` |
+| Video con código: SEBSMEDIA, reels, sus pipelines y el guion del reel destacado (clave `video`) | `app/lib/content/portfolio.ts` + `public/reels/` |
 | Forma del contenido (tipos)                                    | `app/lib/content/schema.ts`     |
 | Validaciones que tumban el build                               | `app/lib/content/index.ts`      |
 | Texto de interfaz (menú, botones, etiquetas) en español        | `app/lib/i18n/es.ts`            |
@@ -52,6 +53,23 @@ Si algo no cuadra, **`npm run build` falla** y lista todos los problemas a la ve
 
 Privacidad: solo se publica el primer teléfono, y no va en el JSON-LD. Las referencias
 (teléfonos de terceros) no se publican; la página dice que están disponibles a solicitud.
+
+### Añadir un reel
+
+Los vídeos van en `public/reels/` comprimidos para la web (720 × 1280, ~2-6 MB; Workers
+Assets no admite archivos de más de 25 MiB), con un póster webp del mismo nombre:
+
+```bash
+ffmpeg -i original.mp4 -vf "scale=720:1280:flags=lanczos,fps=30" -c:v libx264 -preset slow \
+  -crf 26 -profile:v high -pix_fmt yuv420p -c:a aac -b:a 96k -ac 2 -movflags +faststart \
+  public/reels/<id>.mp4
+ffmpeg -ss <segundo> -i original.mp4 -frames:v 1 -vf "scale=432:768:flags=lanczos" \
+  -c:v libwebp -quality 72 public/reels/<id>.webp
+```
+
+Luego una entrada en `video.studio.reels` o `video.clients.reels` de `portfolio.ts`.
+`npm test` falla si el archivo o el póster no existen con esa misma mayúscula. Si un
+vídeo se reemplaza, cámbiale el nombre: `/reels/*` se cachea un año como `immutable`.
 
 `SITE_URL` en `app/lib/site.ts` alimenta el canonical, el `sitemap.xml`, el `robots.txt`
 y el JSON-LD. Si cambias de dominio, es el único sitio donde hay que tocarlo.
@@ -96,6 +114,15 @@ del bundle) sólo aparecen ahí.
 5. **`next/image`**: solo lo usa el retrato del Hero y está comprobado en `npm run
    preview`. Cualquier imagen nueva con `next/image` hay que verificarla ahí antes de
    desplegar.
+6. **Los vídeos de `/reels/*` pasan por `worker/index.mjs`.** El binding `ASSETS` ignora
+   la cabecera `Range` y siempre contesta 200 con el archivo entero, y Safari (iPhone y
+   Mac) no reproduce un vídeo así. Por eso `wrangler.jsonc` apunta `main` a
+   `worker/index.mjs`, que envuelve `.open-next/worker.js` y, solo para `/reels/*`
+   (`assets.run_worker_first`), contesta 206 con el trozo pedido. Lo comprueba
+   `tests/range.test.mjs`; en `npm run preview`:
+   `curl -H "Range: bytes=0-1" -I localhost:8787/reels/glam-urban.mp4` debe dar 206.
+   La demo de SEBSBOT (`sebsbot-demo…workers.dev/video.mp4`) tiene el mismo problema y
+   vive en otro worker.
 
 ### www
 
@@ -134,10 +161,19 @@ Deliberadas; conviene no revertirlas sin medir:
 
 - **Un solo acento de color y contraste AA** en los dos temas (ratios anotados al principio
   de `globals.css`). El texto sobre `bg-primary` usa siempre `text-on-primary`.
-- **Sin librería de animación ni revelados al hacer scroll.** La única animación es la
-  entrada del Hero (`@keyframes`), y `prefers-reduced-motion` la desactiva.
-- **Componentes de servidor por defecto.** Sólo son `'use client'` `Navbar`,
-  `ThemeToggle`, `LanguageToggle`, `ProjectVideo` y `ContactForm`.
+- **Sin librería de animación ni revelados al hacer scroll.** Se mueven la entrada del
+  Hero (`@keyframes`) y los pipelines de la sección de video (`Pipeline.tsx`: un
+  `setTimeout` por paso y transiciones de CSS). Los pipelines solo avanzan mientras están
+  en pantalla, tienen botón de pausa, no cambian de alto al avanzar (los paneles se apilan
+  en la misma celda) y con `prefers-reduced-motion` no arrancan solos.
+- **Componentes de servidor por defecto.** Sólo declaran `'use client'` `Navbar`,
+  `ThemeToggle`, `ProjectVideo`, `ContactForm`, `VideoDialog`, `Pipeline`, `ScriptSync`
+  y `ReelCard`. `LanguageToggle` no lo declara, pero llega al cliente porque lo importa
+  `Navbar`.
+- **Reels: solo el póster hasta que hay intención.** Las tarjetas cargan un webp de
+  ~10-30 KB (`loading="lazy"`); el vídeo se monta al pasar el ratón (mudo) o al hacer
+  clic (modal con sonido). El reel destacado arranca mudo en escritorio al entrar en
+  pantalla y se pausa al salir; en móvil o con ahorro de datos espera al play.
 - **`content-visibility: auto`** en las secciones (`.section-defer`). Crea un bloque
   contenedor para `position: fixed`, por eso el modal del vídeo va en un portal a `<body>`.
 - **Vídeo de demo de SEBSBOT** remoto: no se descarga hasta que la tarjeta se acerca al

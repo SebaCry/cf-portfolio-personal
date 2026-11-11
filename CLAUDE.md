@@ -13,9 +13,10 @@ npm run preview   # OpenNext build + wrangler dev: the real workerd runtime (htt
 npm run deploy    # OpenNext build + wrangler deploy (manual; no CI, git push deploys nothing)
 npx eslint app    # lint source
 npm test          # tests/content.test.mjs (node:test, no deps); CHECK_LINKS=1 hits the network, CV_JSON=<path> compares with Sebas's JSON
+node --test --test-name-pattern="privacidad" tests/content.test.mjs   # one suite/test by name (`npm test -- --test-name-pattern` does NOT filter)
 ```
 
-- `npm test` imports the real `.ts` modules (Node type stripping + a resolve hook for extensionless imports). Sebas's JSON is never committed: it has third-party phones. Also verify with `npm run build`, and with `npm run preview` for anything that touches runtime behavior: many Workers failures (missing Node APIs, dynamic `require`, bundle size) only appear there.
+- `npm test` needs Node >= 22.18: it imports the real `.ts` modules (Node type stripping + a resolve hook for extensionless imports). Sebas's JSON is never committed: it has third-party phones. Also verify with `npm run build`, and with `npm run preview` for anything that touches runtime behavior: many Workers failures (missing Node APIs, dynamic `require`, bundle size) only appear there.
 - `npm run lint` (bare `eslint`) also lints `.open-next/` and `.wrangler/` build output and reports thousands of bogus problems. Lint `app` instead.
 
 ## Deployment traps (each one already broke a deploy)
@@ -26,6 +27,7 @@ npm test          # tests/content.test.mjs (node:test, no deps); CHECK_LINKS=1 h
 - `wrangler.jsonc` declares only the apex domain on purpose. `www` should be a 301 Redirect Rule in the Cloudflare dashboard, not a second custom domain.
 - No `fs` (or other Node-only APIs) in modules that end up in the Worker, including `app/lib/content/*`.
 - `next/image`: only the Hero portrait uses it, and it is verified in `npm run preview`. Check any new `next/image` in preview before deploying.
+- `wrangler.jsonc` `main` is `worker/index.mjs`, not `.open-next/worker.js`. It wraps the OpenNext worker only to answer `Range` requests for `/reels/*` (routed there by `assets.run_worker_first`): the `ASSETS` binding ignores `Range`, and Safari won't play a video without a 206. Keep it `.mjs`, so `next build`'s typecheck never sees the import of the generated `.open-next/worker.js`. `tests/range.test.mjs` covers the parser.
 
 ## Architecture
 
@@ -33,7 +35,8 @@ npm test          # tests/content.test.mjs (node:test, no deps); CHECK_LINKS=1 h
 - Types catch missing/extra fields and missing translations (`L<T> = Record<Locale, T>`). `Text = string | L<string>` is for proper nouns that don't change between languages.
 - `app/lib/content/index.ts` exports `content`, `tr()` and `formatPeriod()`, and runs asserts at import time: periods `YYYY` or `YYYY-MM` with start <= end, URLs `https://` and ASCII (accents percent-encoded), kebab-case unique project ids, reciprocal `sameCodeAs`, no empty strings, `metaDescription` <= 160 chars. The static prerender evaluates the module, so a failing assert breaks `next build` listing every problem.
 - Only server components import `content`. Client components (`Navbar`) get plain strings as props; `app/lib/site.ts` (imported by `Navbar`) must not import `content`.
-- Privacy: only the first phone is published, never in the JSON-LD. References (third-party phones) are not published; the page only says they're available on request. Never link private repos (e.g. `django-sieki`, 404).
+- Privacy: only the first phone is published, never in the JSON-LD. References (third-party phones) are not published; the page only says they're available on request. Never link private repos (e.g. `django-sieki`, 404): the only GitHub URL in the content is the profile, and Anderson links only to `https://www.anderson.insure`. `npm test` enforces all of this.
+- `content.video` (SEBSMEDIA, client reels, both pipelines, the featured reel's `guion.json` excerpt) is deliberately not in `projects`: `CV_JSON=… npm test` requires `projects` to equal the JSON's list exactly. Its data comes from the READMEs of those repos, SEBSMEDIA's database (video 4) and `jp-media-reel/src/guion.json`. Reel files live in `public/reels/`, and `npm test` checks that each file and poster exists with the same case. README "Añadir un reel" has the ffmpeg commands.
 
 **i18n via real URLs, not a client toggle.** `/` is Spanish (`app/(es)/page.tsx`), `/en` is English (`app/(en)/en/page.tsx`). Each route group has its own root layout, because `<html lang>` can only be set from a root layout. There is no `app/layout.tsx`: both layouts render `app/components/RootDocument.tsx` (fonts, the blocking theme script, JSON-LD) and both pages render `app/components/HomePage.tsx`.
 
@@ -43,15 +46,17 @@ npm test          # tests/content.test.mjs (node:test, no deps); CHECK_LINKS=1 h
 - `LanguageToggle` uses `<a>`, not `<Link>`, because switching root layouts forces a full reload anyway.
 - Adding a locale: a new dictionary typed as `Dictionary`, add it to `locales` (config.ts) and `dictionaries` (index.ts), translate every `L<T>` in `portfolio.ts` (the build fails until you do), plus a new route group with a page and layout. Also update `hreflangAlternates` and `htmlLang`/`ogLocale` in config.ts.
 
-**Shared pieces.** `SECTIONS` (`app/lib/site.ts`) is the ordered section list used by `Navbar` and `Footer`; keep it in sync with the order in `HomePage.tsx`. `app/components/ui.tsx` has `Section` (sticky title on the left, CV-style), `Chips`, `PeriodRow`, `ExternalLink` and `SocialLinks` (Hero, Contact, Footer).
+**Shared pieces.** `SECTIONS` (`app/lib/site.ts`) is the ordered section list used by `Navbar` and `Footer`; keep it in sync with the order in `HomePage.tsx` (`npm test` checks it). `app/components/ui.tsx` has `Section` (sticky title on the left, CV-style), `Chips`, `PeriodRow`, `ExternalLink` and `SocialLinks` (Hero, Contact, Footer).
 
-**Server components by default.** Only `Navbar`, `ThemeToggle`, `LanguageToggle`, `ProjectVideo` and `ContactForm` are `'use client'`. The contact form sends through EmailJS (`@emailjs/browser`) with public IDs hardcoded in `ContactForm.tsx`. There is no backend or env vars.
+**Server components by default.** Only `Navbar`, `ThemeToggle`, `ProjectVideo`, `ContactForm`, `VideoDialog`, `Pipeline`, `ScriptSync` and `ReelCard` declare `'use client'`. `VideoSection` resolves every label and step on the server and passes plain strings. `app/lib/media.ts` (`isFrugal`, `prefersReducedMotion`, `useInView`) is shared by the client video components, and `VideoDialog` is the one fullscreen modal (SEBSBOT demo and reels). `LanguageToggle` has no directive but ships to the client anyway because `Navbar` imports it, so the client-bundle rules above apply to it. The contact form sends through EmailJS (`@emailjs/browser`) with public IDs hardcoded in `ContactForm.tsx`. There is no backend or env vars.
 
 **Theming.** Color tokens are CSS variables on `:root` (dark, the default) and `:root.light` in `app/globals.css`, exposed to Tailwind through `@theme inline` (`bg-primary`, `text-on-primary`, `text-neutral-variant`, etc.). Text on `bg-primary` always uses `text-on-primary` (never `text-white`). The contrast ratios are documented at the top of `globals.css`: recheck them if you change a color. The `light` class is set before first paint by the inline script in `RootDocument.tsx`. Add new colors as variables in both blocks plus a `@theme inline` entry.
 
 ## Performance and a11y decisions (don't revert without measuring)
 
-- No animation library and no scroll reveals: the only motion is the Hero entrance (CSS `@keyframes`), and `prefers-reduced-motion` disables it.
+- No animation library and no scroll reveals. Motion: the Hero entrance (CSS `@keyframes`) and the video section's pipelines (`Pipeline.tsx`: one `setTimeout` per step plus CSS transitions). Pipelines only advance while on screen, have a pause button (WCAG 2.2.2), stack every panel in one grid cell so their height never changes (zero CLS), and don't autoplay under `prefers-reduced-motion`.
+- Reel cards load only a lazy webp poster. The video mounts on mouse hover (muted) or on click (`VideoDialog`, with sound). `ScriptSync` autoplays muted on desktop only while on screen, and on mobile / data saver it waits for play (`preload="none"`).
+- The desktop nav row is 1072px and nearly full: with 8 sections it needs `gap-4`. Measure `scrollWidth` vs `clientWidth` of `header nav > div` if you add a section.
 - Sections use `.section-defer` (`content-visibility: auto`). That creates a containing block for `position: fixed`, so overlays (the video modal) must be portaled to `<body>`.
 - The SEBSBOT demo video is remote (`links.video`) and only loads near the viewport, or on click on mobile / data saver.
 - Mobile menu: while open, `main` and `footer` get `inert`, focus moves to the first link and Escape returns it to the toggle.

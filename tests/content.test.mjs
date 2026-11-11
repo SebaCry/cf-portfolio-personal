@@ -48,6 +48,16 @@ const sourceFiles = (dir) =>
     .filter((f) => /\.(tsx?|css)$/.test(f));
 const appSources = sourceFiles('app/').map((f) => [f, read(f)]);
 const dupes = (list) => list.filter((x, i) => list.indexOf(x) !== i);
+const { video } = content;
+
+/** Comprueba cada tramo de la ruta con readdir: así falla también si solo cambia una mayúscula. */
+function assertInPublic(path) {
+  let dir = new URL('public/', root);
+  for (const part of path.split('/').filter(Boolean)) {
+    assert.ok(readdirSync(dir).includes(part), `no existe ${part} en ${dir.pathname}`);
+    dir = new URL(`${part}/`, dir);
+  }
+}
 
 const URL_KEYS = new Set(['url', 'demo', 'app', 'video', 'linkedin', 'github']);
 const contentUrls = [];
@@ -83,6 +93,15 @@ describe('contenido', () => {
       ...content.projects.map((p) => [`${p.id}.technologies`, p.technologies]),
       ...content.websites.map((w) => [`${w.name}.technologies`, w.technologies]),
       ...content.experience.map((e, i) => [`experience[${i}].technologies`, e.technologies ?? []]),
+      ['video.reels.id', [...video.studio.reels, ...video.clients.reels].map((r) => r.id)],
+      ['video.studio.technologies', video.studio.technologies],
+      ['video.clients.technologies', video.clients.technologies],
+      ['video.studio.circuit', video.studio.circuit.map((s) => s.label.es)],
+      ['video.clients.pipeline', video.clients.pipeline.map((s) => s.label.es)],
+      ...locales.flatMap((l) => {
+        const { lines, keys } = video.clients.featured.script[l];
+        return [[`featured.${l}.lines`, lines.map((x) => x[1])], [`featured.${l}.keys`, keys.map((k) => k.name)]];
+      }),
     ];
     assert.deepEqual(lists.flatMap(([where, list]) => dupes(list).map((x) => `${where}: ${x}`)), []);
   });
@@ -104,7 +123,8 @@ describe('contenido', () => {
       read(f)
         .split('\n')
         .map((line, i) => [line, i])
-        .filter(([line]) => /\b(TODO|FIXME|XXX)\b|lorem ipsum/i.test(line))
+        // TODO en mayúsculas: en minúsculas «todo» es una palabra normal en español.
+        .filter(([line]) => /\b(TODO|FIXME|XXX)\b/.test(line) || /lorem ipsum/i.test(line))
         .map(([line, i]) => `${f}:${i + 1} ${line.trim()}`)
     );
     assert.deepEqual(hits, []);
@@ -194,18 +214,39 @@ describe('estructura de la página', () => {
 
   // Windows no distingue mayúsculas, Cloudflare sí.
   test('OG_IMAGE existe en public/ con la misma mayúscula y sus medidas', () => {
-    const parts = OG_IMAGE.url.split('/').filter(Boolean);
-    let dir = new URL('public/', root);
-    for (const part of parts) {
-      assert.ok(readdirSync(dir).includes(part), `no existe ${part} en ${dir.pathname}`);
-      dir = new URL(`${part}/`, dir);
-    }
+    assertInPublic(OG_IMAGE.url);
     const buf = readFileSync(new URL(`public${OG_IMAGE.url}`, root));
     assert.equal(buf.subarray(1, 4).toString(), 'PNG');
     assert.deepEqual(
       { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) },
       { width: OG_IMAGE.width, height: OG_IMAGE.height }
     );
+  });
+
+  test('los reels y sus pósters existen en public/reels/ con la misma mayúscula', () => {
+    const { featured } = video.clients;
+    const paths = [
+      ...[...video.studio.reels, ...video.clients.reels].flatMap((r) => [r.file, r.poster]),
+      ...locales.flatMap((l) => [featured.file[l], featured.poster[l]]),
+    ];
+    for (const path of paths) {
+      assert.match(path, /^\/reels\/[a-z0-9-]+\.(mp4|webp)$/, path);
+      assertInPublic(path);
+    }
+  });
+
+  // Los tiempos tienen que ir en orden: ScriptSync resalta según el segundo del vídeo.
+  test('guion del reel destacado: frases en orden y dentro de cada una inicio < fin', () => {
+    for (const l of locales) {
+      const { lines, keys } = video.clients.featured.script[l];
+      lines.forEach(([text, start, end], i) => {
+        assert.ok(start < end, `${l}: "${text}" termina antes de empezar`);
+        if (i > 0) assert.ok(start >= lines[i - 1][1], `${l}: "${text}" va antes que la anterior`);
+      });
+      for (const { name, value } of keys)
+        if (Array.isArray(value))
+          assert.deepEqual(value, [...value].sort((a, b) => a - b), `${l}.${name} desordenado`);
+    }
   });
 });
 

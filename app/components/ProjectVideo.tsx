@@ -1,8 +1,9 @@
 'use client';
 
-import { Play, X } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { isFrugal, useInView } from '../lib/media';
+import VideoDialog from './VideoDialog';
 
 /**
  * Las etiquetas llegan ya resueltas desde el servidor. El diccionario las
@@ -31,59 +32,19 @@ type ProjectVideoProps = {
  *  - el póster es un marcador CSS, así que no añade ninguna petición.
  */
 export default function ProjectVideo({ src, labels }: ProjectVideoProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isClicked, setIsClicked] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  // Hasta montar se asume frugal: el servidor no sabe qué conexión hay.
+  const [frugal, setFrugal] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isNear = useInView(containerRef, { rootMargin: '200px', once: true });
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || isLoaded) return;
+  useEffect(() => setFrugal(isFrugal()), []);
 
-    // Conexión lenta, ahorro de datos o pantalla pequeña: esperamos al clic.
-    const connection = (
-      navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
-    ).connection;
-    const isFrugal =
-      connection?.saveData === true ||
-      (connection?.effectiveType != null && /2g/.test(connection.effectiveType)) ||
-      window.matchMedia('(max-width: 767px)').matches;
-
-    if (isFrugal || typeof IntersectionObserver === 'undefined') return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setIsLoaded(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '200px' }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [isLoaded]);
-
-  // Bloquear el scroll de fondo y cerrar con Escape mientras el modal está abierto.
-  useEffect(() => {
-    if (!isExpanded) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsExpanded(false);
-    };
-    window.addEventListener('keydown', onKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [isExpanded]);
+  const isLoaded = isClicked || (isNear && !frugal);
 
   const openExpanded = () => {
-    setIsLoaded(true);
+    setIsClicked(true);
     setIsExpanded(true);
   };
 
@@ -125,43 +86,15 @@ export default function ProjectVideo({ src, labels }: ProjectVideoProps) {
         </button>
       </div>
 
-      {isExpanded &&
-        // Portal a <body>: `.section-defer` (content-visibility) crea un bloque
-        // contenedor y un `position: fixed` dentro quedaría recortado a la sección.
-        createPortal(
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={labels.dialog}
-            className="anim-in fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
-            onClick={() => setIsExpanded(false)}
-          >
-            <button
-              type="button"
-              onClick={() => setIsExpanded(false)}
-              className="absolute top-6 right-6 z-10 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
-              aria-label={labels.close}
-              autoFocus
-            >
-              <X className="h-6 w-6" />
-            </button>
-
-            <div
-              className="anim-scale relative aspect-video w-full max-w-6xl overflow-hidden rounded-2xl shadow-2xl"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <video
-                src={src}
-                autoPlay
-                loop
-                controls
-                aria-label={labels.video}
-                className="h-full w-full object-contain"
-              />
-            </div>
-          </div>,
-          document.body
-        )}
+      {isExpanded && (
+        <VideoDialog
+          src={src}
+          dialogLabel={labels.dialog}
+          videoLabel={labels.video}
+          closeLabel={labels.close}
+          onClose={() => setIsExpanded(false)}
+        />
+      )}
     </>
   );
 }
