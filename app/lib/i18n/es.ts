@@ -51,17 +51,16 @@ export const es = {
   },
 
   projects: {
-    demoLink: 'Ver demo',
+    demoLink: 'Demo en vivo',
+    watchDemo: 'Ver demo',
+    gallery: (title: string) => `Capturas de ${title}`,
     appLink: 'Abrir aplicación',
     ofProject: (title: string) => `de ${title}`,
     sharedTitle: 'Dos productos, un mismo código multiempresa',
     sameCodeAs: (title: string) => `Mismo código que ${title}`,
     moreOnGithub: 'Más código en GitHub',
     videoLabel: (title: string) => `Demostración en vídeo de ${title}`,
-    videoExpand: (title: string) => `Ver la demostración de ${title} en pantalla completa`,
     videoDialog: (title: string) => `Demostración de ${title}`,
-    videoPause: 'Pausar el video',
-    videoPlay: 'Reproducir el video',
     close: 'Cerrar',
   },
 

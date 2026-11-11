@@ -28,6 +28,9 @@
   --foreground: #e9efea;
   --card-bg: #151c18;
 
+  /* Curva de las microinteracciones (no es color: vale para los dos temas). */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
   /* Superficie del navbar. Componentes separados por espacios: la notación
      rgb(R G B / alfa) no admite comas mezcladas con la barra. */
   --nav-rgb: 14 19 17;
@@ -111,7 +114,7 @@
   }
 }
 
-@keyframes reveal {
+@keyframes type-in {
   from {
     clip-path: inset(0 100% 0 0);
   }
@@ -147,6 +150,16 @@
 @keyframes progress {
   to {
     transform: scaleX(1);
+  }
+}
+
+/* Cambio de tema: el tema nuevo se abre en círculo desde el botón. */
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--vt-x) var(--vt-y));
+  }
+  to {
+    clip-path: circle(var(--vt-r) at var(--vt-x) var(--vt-y));
   }
 }
 
@@ -211,8 +224,8 @@
   .pulse-ring {
     animation: pulse-ring 1.3s ease-out infinite;
   }
-  .reveal {
-    animation: reveal 0.9s steps(30, end) both;
+  .type-in {
+    animation: type-in 0.9s steps(30, end) both;
   }
   .blink {
     animation: blink 1s steps(1) infinite;
@@ -250,7 +263,11 @@
     }
   }
 
-  /* Botones. El texto sobre primary usa --on-primary, nunca blanco fijo. */
+  /* Microinteracciones (del PR #2). Se usan las propiedades sueltas
+     `translate`/`scale` y no `transform`, para no pisar las animaciones que usan
+     transform (entrada del Hero, sello). Ojo: en Tailwind v4 `translate-*` y
+     `scale-*` usan esas mismas propiedades, así que no mezcles .lift/.card con
+     esas utilidades en el mismo elemento. Solo transform/opacity: CLS 0. */
   .btn-primary,
   .btn-ghost {
     display: inline-flex;
@@ -261,37 +278,183 @@
     padding: 0.75rem 1.25rem;
     font-weight: 600;
     transition:
-      opacity 0.2s ease,
+      translate 0.25s var(--ease-out),
+      scale 0.15s ease,
+      box-shadow 0.25s ease,
       border-color 0.2s ease,
       color 0.2s ease;
   }
+  /* El texto sobre primary usa --on-primary, nunca blanco fijo. */
   .btn-primary {
     background: var(--primary);
     color: var(--on-primary);
-  }
-  .btn-primary:hover {
-    opacity: 0.9;
   }
   .btn-ghost {
     border: 1px solid color-mix(in srgb, var(--neutral) 40%, transparent);
     color: var(--foreground);
   }
+  .btn-primary:hover,
+  .btn-ghost:hover,
+  .lift:hover {
+    translate: 0 -2px;
+  }
+  .btn-primary:hover {
+    box-shadow: 0 12px 28px -12px color-mix(in srgb, var(--primary) 80%, transparent);
+  }
   .btn-ghost:hover {
     border-color: var(--primary);
     color: var(--primary);
   }
+  .btn-primary:active,
+  .btn-ghost:active,
+  .lift:active {
+    translate: 0 0;
+    scale: 0.97;
+  }
+  .lift {
+    transition:
+      translate 0.25s var(--ease-out),
+      scale 0.15s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+  /* Flechas que se asoman en la dirección a la que llevan. */
+  .btn-primary > svg:last-child,
+  .arrow-nudge {
+    transition: translate 0.25s var(--ease-out);
+  }
+  .btn-primary:hover > svg:last-child {
+    translate: 0 2px;
+  }
+  a:hover .arrow-nudge,
+  .group:hover .arrow-nudge {
+    translate: 2px -2px;
+  }
 
-  /* Enlace de texto con flecha (demo, sitio, etc.). */
+  /* Enlace de texto: el subrayado crece de izquierda a derecha. */
   .link {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
     font-weight: 500;
     color: var(--primary);
-    text-underline-offset: 4px;
+    background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 1px;
+    transition: background-size 0.3s var(--ease-out);
   }
   .link:hover {
-    text-decoration: underline;
+    background-size: 100% 1px;
+  }
+
+  /* Tarjeta de proyecto: se eleva y se ilumina el borde al pasar el ratón.
+     Fondo `--surface` (no card-bg): contrasta también dentro de una banda. */
+  .card {
+    border: 1px solid color-mix(in srgb, var(--neutral) 20%, transparent);
+    background: var(--surface);
+    transition:
+      translate 0.35s var(--ease-out),
+      border-color 0.35s ease,
+      box-shadow 0.35s ease;
+  }
+  @media (hover: hover) {
+    .card:hover {
+      translate: 0 -4px;
+      border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+      box-shadow: 0 24px 48px -24px color-mix(in srgb, var(--primary) 45%, transparent);
+    }
+  }
+
+  /* Sitios web: el logo se inclina un poco al pasar por la fila. */
+  .site-logo {
+    transition:
+      scale 0.3s var(--ease-out),
+      rotate 0.3s var(--ease-out);
+  }
+  .site-row:hover .site-logo {
+    scale: 1.08;
+    rotate: -4deg;
+  }
+
+  /* Portada del modal de demo (ProjectDemo): 16:9 fijo (sin CLS) y zoom suave al hover. */
+  .demo-poster {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--neutral) 10%, transparent);
+  }
+  .demo-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: scale 0.6s var(--ease-out);
+  }
+  .demo-poster::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent 55%);
+  }
+  .demo-poster:hover img {
+    scale: 1.04;
+  }
+  .demo-poster-cta {
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 1;
+  }
+  .demo-poster:hover .demo-poster-cta {
+    translate: 0 -2px;
+  }
+
+  /* <dialog> nativo. Preflight pone margin: 0 a todo: hay que devolverle el
+     `margin: auto` que lo centra. Entrada y salida con @starting-style y
+     `allow-discrete` (display y overlay), sin JavaScript. */
+  .demo-dialog {
+    width: min(100% - 2rem, 64rem);
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
+    border: 1px solid color-mix(in srgb, var(--neutral) 25%, transparent);
+    border-radius: 1rem;
+    background: var(--card-bg);
+    color: var(--foreground);
+    box-shadow: 0 32px 80px -24px rgb(0 0 0 / 0.6);
+    opacity: 0;
+    translate: 0 1.5rem;
+    scale: 0.98;
+    transition:
+      opacity 0.3s ease,
+      translate 0.4s var(--ease-out),
+      scale 0.4s var(--ease-out),
+      overlay 0.4s allow-discrete,
+      display 0.4s allow-discrete;
+  }
+  .demo-dialog[open] {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+  .demo-dialog::backdrop {
+    background: rgb(0 0 0 / 0);
+    transition:
+      background-color 0.3s ease,
+      overlay 0.4s allow-discrete,
+      display 0.4s allow-discrete;
+  }
+  .demo-dialog[open]::backdrop {
+    background: rgb(0 0 0 / 0.75);
+  }
+  @starting-style {
+    .demo-dialog[open] {
+      opacity: 0;
+      translate: 0 1.5rem;
+      scale: 0.98;
+    }
+    .demo-dialog[open]::backdrop {
+      background: rgb(0 0 0 / 0);
+    }
   }
 
   /* Navbar: el fondo se define con la variable de tema.
@@ -323,6 +486,29 @@
   .nav-link:hover::after,
   .nav-link[data-active="true"]::after {
     width: 100%;
+  }
+}
+
+/* Con el modal de demo abierto, la página de fondo no hace scroll. */
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+/* View Transitions (del PR #2), solo si el usuario no pidió menos movimiento. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Cambio de idioma (/ <-> /en es una navegación completa): fundido nativo. */
+  @view-transition {
+    navigation: auto;
+  }
+
+  /* Cambio de tema: ThemeToggle añade .theme-vt y las coordenadas del clic. */
+  :root.theme-vt::view-transition-old(root),
+  :root.theme-vt::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+  :root.theme-vt::view-transition-new(root) {
+    animation: theme-reveal 0.6s var(--ease-out);
   }
 }
 

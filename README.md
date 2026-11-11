@@ -176,28 +176,37 @@ revisiones: estrategia UX, dirección de arte, interacción y la mirada de quien
   tarjetas usan `bg-surface`, que se invierte dentro de una banda.
 - **Titulares angostos con la misma fuente**: Bricolage Grotesque variable con su eje
   `wdth` (clase `.display`); ninguna familia nueva.
-- **Sin librería de animación ni revelados al hacer scroll.** Solo se mueve lo que tiene
-  sentido o responde a una acción: la entrada del Hero y su sello «Aprobado» (`@keyframes`,
-  una vez), la barra de progreso de lectura (CSS `animation-timeline`, sin JS), las tarjetas
-  al pasar el ratón y los pipelines (`Pipeline.tsx`). Los pipelines solo avanzan en
-  pantalla, tienen botón de pausa, no cambian de alto (cero CLS) y con
+- **Sin librería de animación ni revelados al hacer scroll.** El PR #2 los había añadido
+  (`animation-timeline: view()`) y se quitaron al unirlo con el rediseño: esconden el
+  contenido hasta que entra en pantalla y chocan con `content-visibility`. Solo se mueve lo
+  que tiene sentido o responde a una acción: la entrada del Hero y su sello «Aprobado»
+  (`@keyframes`, una vez), la barra de progreso de lectura (CSS `animation-timeline`, sin
+  JS), las microinteracciones al pasar el ratón (del PR #2: botones, tarjetas, flechas,
+  subrayado de enlaces, logos) y los pipelines (`Pipeline.tsx`). Los pipelines solo avanzan
+  en pantalla, tienen botón de pausa, no cambian de alto (cero CLS) y con
   `prefers-reduced-motion` no arrancan.
+- **View Transitions** (del PR #2): fundido nativo al cambiar de idioma (`@view-transition`)
+  y círculo al cambiar de tema (`startViewTransition`). Con `prefers-reduced-motion`, nada.
 - **Video por capas**: los reels a la vista y el proceso (pipelines y «Del código al
   video») plegado en `<details>` nativos, sin JS.
 - **Componentes de servidor por defecto.** Sólo declaran `'use client'` `Navbar`,
-  `ThemeToggle`, `ProjectVideo`, `ContactForm`, `VideoDialog`, `Pipeline`, `ScriptSync`
+  `ThemeToggle`, `ProjectDemo`, `ContactForm`, `VideoDialog`, `Pipeline`, `ScriptSync`
   y `ReelCard`. `LanguageToggle` no lo declara, pero llega al cliente porque lo importa
   `Navbar`.
-- **Reels: solo el póster hasta que hay intención.** Las tarjetas cargan un webp de
-  ~10-30 KB (`loading="lazy"`); el vídeo se monta al pasar el ratón (mudo) o al hacer
-  clic (modal con sonido). El reel destacado arranca mudo en escritorio al entrar en
-  pantalla y se pausa al salir; en móvil, con ahorro de datos o con «reducir movimiento»
-  espera al play. Lo mismo la demo de SEBSBOT, que además tiene botón de pausa y muestra
-  un cuadro del propio vídeo como póster.
+- **Nada arranca solo con «reducir movimiento», en móvil o con ahorro de datos.** Las
+  tarjetas de reels cargan un webp de ~10-30 KB (`loading="lazy"`); el vídeo se monta al
+  pasar el ratón (mudo) o al hacer clic (modal con sonido). El reel destacado arranca mudo
+  en escritorio al entrar en pantalla y se pausa al salir. La demo de SEBSBOT nunca arranca
+  sola: muestra un cuadro del propio vídeo y el vídeo se carga al abrir su `<dialog>`.
 - **`content-visibility: auto`** en las secciones (`.section-defer`). Crea un bloque
-  contenedor para `position: fixed`, por eso el modal del vídeo va en un portal a `<body>`.
-- **Vídeo de demo de SEBSBOT** remoto: no se descarga hasta que la tarjeta se acerca al
-  viewport, y en móvil o con ahorro de datos sólo al pulsar play.
+  contenedor para `position: fixed`: los overlays van en un `<dialog>` modal (capa superior)
+  o en un portal a `<body>`.
+- **Demos de proyectos** en `projects[].media` (`poster`, `video`, `images`): botón "Ver demo"
+  y `<dialog>` nativo. El vídeo remoto de SEBSBOT solo se descarga al abrir el modal. Las
+  capturas van en WebP 16:9 en `public/images/proyectos/`.
+- **Logos de los sitios** en `websites[].logo`: sacados del HTML de cada sitio (logo del
+  header, favicon SVG o apple-touch-icon), recortados a 96x96 en WebP (o el SVG limpio) en
+  `public/images/sitios/`. Los asserts exigen uno por sitio y `npm test` comprueba el fichero.
 - **Menú móvil accesible**: al abrirlo, `main` y `footer` quedan `inert`, el foco va al
   primer enlace y Escape lo devuelve al botón.
 - **Fuentes vía `next/font`**, servidas desde el propio dominio.

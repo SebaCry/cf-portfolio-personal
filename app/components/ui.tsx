@@ -101,7 +101,7 @@ export function ExternalLink({
     <a href={href} target="_blank" rel="noopener noreferrer" className="link">
       {children}
       {srSuffix && <span className="sr-only"> {srSuffix}</span>}
-      <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+      <ArrowUpRight className="arrow-nudge h-4 w-4" aria-hidden="true" />
     </a>
   );
 }
@@ -124,7 +124,7 @@ export function SocialLinks() {
               ? {}
               : { target: '_blank', rel: 'noopener noreferrer' })}
             aria-label={label}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-neutral/25 text-neutral-variant transition-colors hover:border-primary hover:text-primary"
+            className="lift inline-flex h-11 w-11 items-center justify-center rounded-lg border border-neutral/25 text-neutral-variant hover:border-primary hover:text-primary"
           >
             <Icon className="h-5 w-5" aria-hidden="true" />
           </a>

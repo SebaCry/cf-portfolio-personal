@@ -221,10 +221,10 @@ export default function Pipeline({
                   <p className="font-mono text-[11px] tracking-wider text-neutral-variant uppercase">
                     → {labels.output}
                   </p>
-                  {/* La clase `reveal` solo en el activo: se reinicia cada vez que le toca. */}
+                  {/* La clase `type-in` solo en el activo: se reinicia cada vez que le toca. */}
                   <p
                     className={`mt-2 font-mono text-sm leading-relaxed break-words text-foreground ${
-                      index === active ? 'reveal' : ''
+                      index === active ? 'type-in' : ''
                     }`}
                   >
                     {step.output}

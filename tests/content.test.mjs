@@ -212,6 +212,15 @@ describe('estructura de la página', () => {
     assert.deepEqual(ids, SECTIONS.map((s) => s.id));
   });
 
+  test('logos de los sitios y media de los proyectos existen en public/', () => {
+    const paths = [
+      ...content.websites.map((w) => w.logo),
+      ...content.projects.flatMap((p) => [p.media?.poster, ...(p.media?.images ?? []).map((i) => i.src)]),
+    ].filter(Boolean);
+    // Misma mayúscula que en disco: Windows no las distingue, Cloudflare sí.
+    for (const path of paths) assertInPublic(path);
+  });
+
   // Windows no distingue mayúsculas, Cloudflare sí.
   test('OG_IMAGE existe en public/ con la misma mayúscula y sus medidas', () => {
     assertInPublic(OG_IMAGE.url);
@@ -223,14 +232,13 @@ describe('estructura de la página', () => {
     );
   });
 
-  test('las pruebas del Hero llevan a un ancla que existe; sus imágenes y los pósters están en public/', () => {
+  test('las pruebas del Hero llevan a un ancla que existe y sus imágenes están en public/', () => {
     assert.match(read('app/components/VideoSection.tsx'), /id="sebsmedia"/);
     const anchors = new Set([...content.projects.map((p) => `#proyecto-${p.id}`), '#sebsmedia']);
     for (const item of content.highlights) {
       assert.ok(anchors.has(item.href), `${item.title}: ${item.href} no es un ancla de la página`);
       if (item.image) assertInPublic(item.image);
     }
-    for (const project of content.projects) if (project.poster) assertInPublic(project.poster);
     assertInPublic(AVATAR);
   });
 
@@ -341,7 +349,7 @@ describe('fidelidad al JSON de Sebas', { skip: !process.env.CV_JSON && 'define C
       content.projects.map((p) => ({
         nombre: p.title,
         stack: p.technologies,
-        enlaces: [p.links.demo, p.links.app, p.links.video].filter(Boolean),
+        enlaces: [p.links.demo, p.links.app, p.media?.video].filter(Boolean),
         acceso: Boolean(p.access),
       })),
       cv.proyectos.map((p) => ({
