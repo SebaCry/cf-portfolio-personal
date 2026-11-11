@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { isFrugal, useInView } from '../lib/media';
+import { isFrugal, prefersReducedMotion, useInView } from '../lib/media';
 
 type ScriptKey = { name: string; value: number | number[] };
 
@@ -34,7 +34,7 @@ const LINE: Record<State, string> = {
 const NUMBER: Record<State, string> = {
   todo: '',
   active: 'rounded bg-primary text-on-primary',
-  done: 'text-primary',
+  done: 'text-approved',
 };
 
 /**
@@ -42,8 +42,8 @@ const NUMBER: Record<State, string> = {
  * se ilumina la línea que se está ejecutando. Clic en una línea = saltar ahí.
  *
  * En escritorio arranca en silencio al entrar en pantalla y se pausa al salir
- * (si nadie le subió el volumen). En móvil o con ahorro de datos no descarga
- * nada hasta que el usuario pulsa play, y entonces suena.
+ * (si nadie le subió el volumen). En móvil, con ahorro de datos o con "reducir
+ * movimiento" no descarga nada hasta que el usuario pulsa play, y entonces suena.
  */
 export default function ScriptSync({ src, poster, fps, lines, keys, jsonKey, labels }: ScriptSyncProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -51,15 +51,16 @@ export default function ScriptSync({ src, poster, fps, lines, keys, jsonKey, lab
   const autoPaused = useRef(false);
   const started = useRef(false);
   const [frame, setFrame] = useState(0);
-  const [frugal, setFrugal] = useState(true);
+  // Hasta montar se asume que no: el servidor no sabe qué conexión hay.
+  const [canAutoplay, setCanAutoplay] = useState(false);
   const inView = useInView(boxRef, { threshold: 0.25 });
 
-  useEffect(() => setFrugal(isFrugal()), []);
+  useEffect(() => setCanAutoplay(!isFrugal() && !prefersReducedMotion()), []);
 
   // Reproducción automática en silencio solo en escritorio y solo en pantalla.
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || frugal) return;
+    if (!video || !canAutoplay) return;
     if (inView && (!started.current || autoPaused.current)) {
       started.current = true;
       autoPaused.current = false;
@@ -68,7 +69,7 @@ export default function ScriptSync({ src, poster, fps, lines, keys, jsonKey, lab
       autoPaused.current = true;
       video.pause();
     }
-  }, [inView, frugal]);
+  }, [inView, canAutoplay]);
 
   // timeupdate llega ~4 veces por segundo: para seguir cada cuadro se lee en rAF.
   useEffect(() => {
@@ -117,14 +118,14 @@ export default function ScriptSync({ src, poster, fps, lines, keys, jsonKey, lab
           loop
           controls
           playsInline
-          // Silencio solo cuando arranca solo (escritorio). En móvil, play suena.
-          muted={!frugal}
+          // Silencio solo cuando arranca solo (escritorio). Si no, play suena.
+          muted={canAutoplay}
           aria-label={labels.video}
           className="h-full w-full object-cover"
         />
       </div>
 
-      <div className="min-w-0 overflow-hidden rounded-xl border border-neutral/20 bg-background">
+      <div className="min-w-0 overflow-hidden rounded-xl border border-neutral/20 bg-surface">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-neutral/20 px-4 py-2 font-mono text-xs text-neutral-variant">
           <span>{labels.file}</span>
           <span className="tabular-nums" aria-hidden="true">

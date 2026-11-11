@@ -53,9 +53,22 @@ export default function Pipeline({
   const [waiting, setWaiting] = useState(Boolean(steps[0].gate));
   const [playing, setPlaying] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLOListElement>(null);
   const inView = useInView(rootRef, { threshold: 0.3 });
 
   useEffect(() => setPlaying(!prefersReducedMotion()), []);
+
+  // En móvil el riel es una fila que se desliza: el paso activo siempre a la vista.
+  // Solo mueve la fila (scrollLeft), nunca la página. En escritorio no hay overflow.
+  useEffect(() => {
+    const rail = railRef.current;
+    const item = rail?.children[active] as HTMLElement | undefined;
+    if (!rail || !item || rail.scrollWidth <= rail.clientWidth) return;
+    rail.scrollTo({
+      left: item.offsetLeft - 16,
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+    });
+  }, [active]);
 
   useEffect(() => {
     if (!playing || !inView) return;
@@ -83,26 +96,35 @@ export default function Pipeline({
   const progress = active / (steps.length - 1);
 
   return (
-    <div ref={rootRef} className="rounded-xl border border-neutral/20 bg-card-bg p-4 sm:p-6">
-      <div className="grid gap-6 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-10">
+    <div ref={rootRef} className="rounded-2xl border border-neutral/20 bg-surface p-4 sm:p-6">
+      {/* grid-cols-1 = minmax(0,1fr): sin eso, la fila de píldoras (nowrap) estira
+          la columna implícita en móvil y el panel se sale de la pantalla. */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-10">
         {/* Riel. En escritorio, una línea que se llena hasta la estación activa. */}
-        <div className="relative">
+        <div className="relative min-w-0">
           <span
             aria-hidden="true"
             className="absolute top-5 bottom-5 left-[15.5px] hidden w-px bg-neutral/25 lg:block"
           />
           <span
             aria-hidden="true"
-            className="absolute top-5 bottom-5 left-[15.5px] hidden w-px origin-top bg-primary transition-transform duration-500 ease-out lg:block"
+            className="absolute top-5 bottom-5 left-[15.5px] hidden w-px origin-top bg-approved transition-transform duration-500 ease-out lg:block"
             style={{ transform: `scaleY(${progress})` }}
           />
 
-          <ol aria-label={title} className="relative flex flex-wrap gap-2 lg:flex-col lg:gap-1">
+          <ol
+            ref={railRef}
+            aria-label={title}
+            className="relative -mx-1 flex snap-x scroll-px-1 gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0 lg:pb-0"
+          >
             {steps.map((step, index) => {
               const isActive = index === active;
               const isDone = index < active;
               return (
-                <li key={step.label} className={`relative ${step.parallel ? 'lg:pl-6' : ''}`}>
+                <li
+                  key={step.label}
+                  className={`relative shrink-0 snap-start ${step.parallel ? 'lg:pl-6' : ''}`}
+                >
                   {step.parallel && (
                     <span
                       aria-hidden="true"
@@ -113,23 +135,26 @@ export default function Pipeline({
                     type="button"
                     onClick={() => select(index)}
                     aria-current={isActive ? 'step' : undefined}
-                    className="group flex items-center gap-3 rounded-lg text-left whitespace-nowrap lg:w-full lg:py-1"
+                    // Móvil: una píldora de 44 px con el nombre. Escritorio: fila del riel.
+                    className={`group flex min-h-11 items-center gap-2 rounded-full border py-1 pr-3.5 pl-1.5 text-left whitespace-nowrap lg:min-h-0 lg:w-full lg:gap-3 lg:rounded-lg lg:border-0 lg:p-0 lg:py-1 ${
+                      isActive ? 'border-primary' : 'border-neutral/25'
+                    }`}
                   >
                     <span
                       className={`relative grid h-8 w-8 shrink-0 place-items-center border font-mono text-[11px] font-semibold transition-colors duration-300 ${
                         step.gate ? 'rounded-md' : 'rounded-full'
                       } ${
                         isActive
-                          ? 'pulse-ring border-primary bg-card-bg text-primary'
+                          ? 'pulse-ring border-primary bg-surface text-primary'
                           : isDone
-                            ? 'border-primary bg-primary text-on-primary'
-                            : 'border-neutral/40 bg-card-bg text-neutral-variant'
+                            ? 'border-approved bg-approved text-on-approved'
+                            : 'border-neutral/40 bg-surface text-neutral-variant'
                       }`}
                     >
                       {isDone ? <Check className="h-4 w-4" aria-hidden="true" /> : pad(index + 1)}
                     </span>
                     <span
-                      className={`text-sm max-lg:sr-only ${
+                      className={`text-sm ${
                         isActive
                           ? 'font-medium text-foreground'
                           : 'text-neutral-variant group-hover:text-foreground'
@@ -158,7 +183,7 @@ export default function Pipeline({
                   {labels.waiting}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-on-primary">
+                <span className="inline-flex items-center gap-1 rounded-full bg-approved px-2 py-0.5 text-on-approved">
                   <Check className="h-3 w-3" aria-hidden="true" />
                   {labels.approved}
                 </span>

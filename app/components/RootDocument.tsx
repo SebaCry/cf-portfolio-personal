@@ -8,11 +8,16 @@ import '../globals.css';
  * Antes llegaban por @import dentro de globals.css, lo que encadenaba
  * CSS -> CSS de Google -> archivos de fuente antes de poder pintar texto.
  */
+// Variable (todos los pesos en un archivo) con dos ejes:
+// - wdth: los titulares van angostos con la clase `.display`;
+// - opsz: a tamaño grande el navegador usa las formas de display (más compactas).
+//   Es lo que le da carácter al h1.
+// Peso medido (latin, woff2): solo wght 41 KB · +wdth 78 KB · +wdth+opsz 131 KB.
 const display = Bricolage_Grotesque({
   variable: '--font-display',
   subsets: ['latin'],
   display: 'swap',
-  weight: ['400', '500', '600', '700', '800'],
+  axes: ['opsz', 'wdth'],
 });
 
 const mono = JetBrains_Mono({

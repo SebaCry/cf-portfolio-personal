@@ -46,7 +46,20 @@ export type Portfolio = {
     bio: L<string[]>;
     /** <meta description> y JSON-LD. Máximo 160 caracteres (lo valida `index.ts`). */
     metaDescription: L<string>;
+    /** Titular del Hero (h1): el posicionamiento. Lo eligió Sebas el 2026-11-11. */
+    tagline: L<string>;
+    /** Línea bajo el titular. */
+    summary: L<string>;
   };
+  /** Pruebas del Hero: tarjetas que llevan a un trabajo de la misma página. */
+  highlights: {
+    title: string;
+    text: L<string>;
+    /** Ancla en la página: '#proyecto-<id>' o '#sebsmedia'. Lo comprueba el test. */
+    href: `#${string}`;
+    /** Miniatura en public/. Sin ella, la tarjeta lleva un icono. */
+    image?: string;
+  }[];
   contact: {
     email: string;
     /** Único teléfono que se publica. No va en el JSON-LD. */
@@ -75,6 +88,8 @@ export type Portfolio = {
     technologies: string[];
     /** Solo enlaces públicos: nunca un repo privado. */
     links: { demo?: string; app?: string; video?: string };
+    /** Póster del vídeo en public/ (un cuadro del propio vídeo, sin subtítulos). */
+    poster?: string;
     /** Nota de acceso restringido, p. ej. Cloudflare Access. */
     access?: L<string>;
     /** id del proyecto que comparte el mismo código (la relación debe ser recíproca). */
@@ -108,6 +123,8 @@ export type Portfolio = {
         by: string;
         file: L<string>;
         poster: L<string>;
+        /** Duración de cada versión, en segundos. */
+        seconds: L<number>;
         /** Extracto real de src/guion.json: [texto, inicio, fin] en segundos. */
         script: L<{
           fps: number;

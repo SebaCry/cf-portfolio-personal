@@ -35,7 +35,47 @@ export const portfolio = {
       es: 'Sebastián Pérez, desarrollador full-stack en Ibagué y fundador de SIEKI: APIs en Cloudflare Workers, interfaces en React/Next.js y backends en Python/Django.',
       en: 'Sebastián Pérez, full-stack developer in Ibagué, Colombia, and founder of SIEKI: APIs on Cloudflare Workers, React/Next.js interfaces, Python/Django backends.',
     },
+    // Posicionamiento del Hero, elegido por Sebas el 2026-11-11 (audiencia: empleadores).
+    // Sale de datos que ya están aquí: SEBSBOT, Bunker/EPA y la sección de video.
+    tagline: {
+      es: 'Construyo productos con agentes de IA, de principio a fin.',
+      en: 'I build products with AI agents, end to end.',
+    },
+    summary: {
+      es: 'Back-offices sobre Cloudflare, un centro de mando para agentes en más de 20 proyectos y videos hechos con código.',
+      en: 'Back offices on Cloudflare, a command center for agents across more than 20 projects, and videos made with code.',
+    },
   },
+
+  // Las tres pruebas del Hero. Textos tomados de las descripciones de cada proyecto.
+  highlights: [
+    {
+      title: 'SEBSBOT',
+      text: {
+        es: 'Centro de mando para dirigir agentes de IA en más de 20 proyectos, con aprobaciones desde el celular.',
+        en: 'A command center for directing AI agents across more than 20 projects, with approvals from my phone.',
+      },
+      href: '#proyecto-sebsbot',
+      image: '/images/sebsbot-aprobaciones.webp',
+    },
+    {
+      title: 'Bunker Capilar OS · EPA',
+      text: {
+        es: 'Un back-office multiempresa sobre Cloudflare Workers: inventario, punto de venta y caja. En EPA reemplaza a Alegra.',
+        en: 'A multi-company back office on Cloudflare Workers: inventory, point of sale and cash register. At EPA it replaces Alegra.',
+      },
+      href: '#proyecto-bunker-capilar-os',
+    },
+    {
+      title: 'SEBSMEDIA',
+      text: {
+        es: 'Estudio de Shorts con IA: once estaciones, y nada se publica sin mi aprobación.',
+        en: 'An AI Shorts studio: eleven stations, and nothing gets published without my approval.',
+      },
+      href: '#sebsmedia',
+      image: '/reels/escrito-esta-isaias.webp',
+    },
+  ],
 
   contact: {
     email: 'jspc513@gmail.com',
@@ -102,6 +142,8 @@ export const portfolio = {
         demo: 'https://sebsbot-demo.jspc513.workers.dev',
         video: 'https://sebsbot-demo.jspc513.workers.dev/video.mp4',
       },
+      // Segundo 29 del demo (el Cerebro y sus ramas), recortado sin subtítulos.
+      poster: '/images/sebsbot-cerebro.webp',
     },
     {
       id: 'bunker-capilar-os',
@@ -418,6 +460,7 @@ export const portfolio = {
         by: 'JP Media Groups',
         file: { es: '/reels/jp-media-es.mp4', en: '/reels/jp-media-en.mp4' },
         poster: { es: '/reels/jp-media-es.webp', en: '/reels/jp-media-en.webp' },
+        seconds: { es: 23.7, en: 23.2 },
         script: {
           es: {
             fps: 30,

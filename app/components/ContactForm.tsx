@@ -17,10 +17,11 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
   const [status, setStatus] = useState<Status>('idle');
   const [form, setForm] = useState({ name: '', email: '', message: '' });
 
-  // El mensaje de resultado se limpia solo, pero sin dejar el timer colgando
-  // si el componente se desmonta antes.
+  // El aviso de éxito se limpia solo, sin dejar el timer colgando si el
+  // componente se desmonta antes. El de error se queda hasta el siguiente envío:
+  // quien no alcanzó a leerlo tiene que poder escribir al correo.
   useEffect(() => {
-    if (status !== 'success' && status !== 'error') return;
+    if (status !== 'success') return;
     const timer = setTimeout(() => setStatus('idle'), 6000);
     return () => clearTimeout(timer);
   }, [status]);
@@ -60,7 +61,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
           name="name"
           value={form.name}
           onChange={(event) => setForm({ ...form, name: event.target.value })}
-          className="w-full rounded-xl border border-neutral/20 bg-card-bg px-4 py-3 text-foreground transition-colors placeholder:text-neutral focus:border-primary focus:outline-none"
+          className="w-full rounded-xl border border-neutral bg-surface px-4 py-3 text-foreground transition-colors placeholder:text-neutral focus:border-primary"
           placeholder={t.namePlaceholder}
           autoComplete="name"
           required
@@ -77,7 +78,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
           name="email"
           value={form.email}
           onChange={(event) => setForm({ ...form, email: event.target.value })}
-          className="w-full rounded-xl border border-neutral/20 bg-card-bg px-4 py-3 text-foreground transition-colors placeholder:text-neutral focus:border-primary focus:outline-none"
+          className="w-full rounded-xl border border-neutral bg-surface px-4 py-3 text-foreground transition-colors placeholder:text-neutral focus:border-primary"
           placeholder={t.emailPlaceholder}
           autoComplete="email"
           required
@@ -94,7 +95,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
           value={form.message}
           onChange={(event) => setForm({ ...form, message: event.target.value })}
           rows={6}
-          className="w-full resize-none rounded-xl border border-neutral/20 bg-card-bg px-4 py-3 text-foreground transition-colors placeholder:text-neutral focus:border-primary focus:outline-none"
+          className="w-full resize-none rounded-xl border border-neutral bg-surface px-4 py-3 text-foreground transition-colors placeholder:text-neutral focus:border-primary"
           placeholder={t.messagePlaceholder}
           required
         />
@@ -103,7 +104,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
       {/* aria-live: los lectores de pantalla anuncian el resultado del envío. */}
       <div aria-live="polite" aria-atomic="true">
         {status === 'success' && (
-          <p className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 p-4 text-primary">
+          <p className="flex items-center gap-3 rounded-xl border border-approved/30 bg-approved/10 p-4 text-approved">
             <CheckCircle className="h-5 w-5 shrink-0" aria-hidden="true" />
             {t.success}
           </p>

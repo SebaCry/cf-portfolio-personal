@@ -9,21 +9,17 @@ export const en: Dictionary = {
 
   nav: {
     home: 'Home',
-    about: 'About',
-    experience: 'Experience',
     projects: 'Projects',
     video: 'Video',
     websites: 'Websites',
-    skills: 'Skills',
-    education: 'Education',
+    profile: 'Profile',
     contact: 'Contact',
     hire: 'Hire me',
     mainNav: 'Main navigation',
     mobileNav: 'Mobile navigation',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
-    toLight: 'Switch to light mode',
-    toDark: 'Switch to dark mode',
+    lightMode: 'Light mode',
     switchLanguage: 'Change language',
     languageName: 'English',
   },
@@ -31,15 +27,20 @@ export const en: Dictionary = {
   hero: {
     sectionLabel: 'Introduction',
     ctaProjects: 'View projects',
-    ctaContact: 'Get in touch',
     portraitAlt: (name: string) => `Portrait of ${name}`,
+    proofs: 'Featured work',
   },
 
   period: {
     present: 'Present',
   },
 
-  experience: {
+  profile: {
+    about: 'About',
+    experience: 'Experience',
+    education: 'Education',
+    skills: 'Skills',
+    languages: 'Languages',
     site: 'Website',
   },
 
@@ -53,6 +54,8 @@ export const en: Dictionary = {
     videoLabel: (title: string) => `Video demo of ${title}`,
     videoExpand: (title: string) => `Watch the ${title} demo full screen`,
     videoDialog: (title: string) => `${title} demo`,
+    videoPause: 'Pause the video',
+    videoPlay: 'Play the video',
     close: 'Close',
   },
 
@@ -61,6 +64,7 @@ export const en: Dictionary = {
     circuit: 'The circuit, step by step',
     pipeline: 'How a reel gets made',
     codeToVideo: 'From code to video',
+    howItWorks: 'See how it gets made',
     codeHint: 'The video reads this file. Tap a line to jump to that moment.',
     frame: 'frame',
     gate: 'Gate',
@@ -79,11 +83,6 @@ export const en: Dictionary = {
 
   websites: {
     stack: 'Stack',
-  },
-
-  skills: {
-    technical: 'Technical',
-    languages: 'Languages',
   },
 
   contact: {

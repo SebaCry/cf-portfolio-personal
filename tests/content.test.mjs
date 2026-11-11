@@ -38,7 +38,7 @@ registerHooks({
 const { content, formatPeriod, tr } = await import('../app/lib/content/index.ts');
 const { getDictionary, locales } = await import('../app/lib/i18n/index.ts');
 const { buildJsonLd } = await import('../app/lib/metadata.ts');
-const { OG_IMAGE, SECTIONS, SITE_URL } = await import('../app/lib/site.ts');
+const { AVATAR, OG_IMAGE, SECTIONS, SITE_URL } = await import('../app/lib/site.ts');
 
 const root = new URL('../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), 'utf8');
@@ -223,6 +223,17 @@ describe('estructura de la página', () => {
     );
   });
 
+  test('las pruebas del Hero llevan a un ancla que existe; sus imágenes y los pósters están en public/', () => {
+    assert.match(read('app/components/VideoSection.tsx'), /id="sebsmedia"/);
+    const anchors = new Set([...content.projects.map((p) => `#proyecto-${p.id}`), '#sebsmedia']);
+    for (const item of content.highlights) {
+      assert.ok(anchors.has(item.href), `${item.title}: ${item.href} no es un ancla de la página`);
+      if (item.image) assertInPublic(item.image);
+    }
+    for (const project of content.projects) if (project.poster) assertInPublic(project.poster);
+    assertInPublic(AVATAR);
+  });
+
   test('los reels y sus pósters existen en public/reels/ con la misma mayúscula', () => {
     const { featured } = video.clients;
     const paths = [
@@ -248,6 +259,46 @@ describe('estructura de la página', () => {
           assert.deepEqual(value, [...value].sort((a, b) => a - b), `${l}.${name} desordenado`);
     }
   });
+});
+
+// globals.css documenta los contrastes; esto los recalcula para que un cambio de
+// color no baje de AA sin que nadie lo note.
+describe('colores (WCAG AA, 4,5:1)', () => {
+  const css = read('app/globals.css');
+  const tokens = (selector) =>
+    Object.fromEntries(
+      [...css.split(`${selector} {`)[1].split('}')[0].matchAll(/--([\w-]+):\s*(#[0-9a-f]{6})\b/gi)].map(
+        (m) => [m[1], m[2]]
+      )
+    );
+  const luminance = (hex) => {
+    const [r, g, b] = [1, 3, 5]
+      .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a, b) => {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+  const PAIRS = [
+    ...['foreground', 'neutral-variant', 'neutral', 'primary', 'approved', 'error'].flatMap((text) => [
+      [text, 'background'],
+      [text, 'card-bg'],
+    ]),
+    ['on-primary', 'primary'],
+    ['on-approved', 'approved'],
+  ];
+
+  for (const [mode, selector] of [['oscuro', ':root'], ['claro', ':root.light']]) {
+    test(`modo ${mode}`, () => {
+      const c = tokens(selector);
+      const bad = PAIRS.filter(([a, b]) => !(ratio(c[a], c[b]) >= 4.5)).map(
+        ([a, b]) => `${a} sobre ${b}: ${c[a] && c[b] ? ratio(c[a], c[b]).toFixed(2) : 'falta el token'}`
+      );
+      assert.deepEqual(bad, []);
+    });
+  }
 });
 
 describe('fidelidad al JSON de Sebas', { skip: !process.env.CV_JSON && 'define CV_JSON=<ruta a cv.json>' }, () => {

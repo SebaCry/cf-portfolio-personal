@@ -111,9 +111,10 @@ del bundle) sólo aparecen ahí.
    mientras `open-next.config.ts` no configure caché incremental.
 4. **Nada de `fs` ni APIs exclusivas de Node** en módulos que acaban en el Worker
    (incluido `app/lib/content/`): `fs` no existe en workerd.
-5. **`next/image`**: solo lo usa el retrato del Hero y está comprobado en `npm run
-   preview`. Cualquier imagen nueva con `next/image` hay que verificarla ahí antes de
-   desplegar.
+5. **Sin `next/image`.** En Workers, sin un binding de imágenes, `/_next/image` devuelve el
+   archivo original sin redimensionar (en preview, el PNG de 154 KB para un avatar de
+   56 px). Las imágenes van como webp ya a su tamaño en `public/` con `<img>`. Si algún
+   día se usa `next/image`, hay que mirar en `npm run preview` cuánto pesa lo que sirve.
 6. **Los vídeos de `/reels/*` pasan por `worker/index.mjs`.** El binding `ASSETS` ignora
    la cabecera `Range` y siempre contesta 200 con el archivo entero, y Safari (iPhone y
    Mac) no reproduce un vídeo así. Por eso `wrangler.jsonc` apunta `main` a
@@ -157,15 +158,32 @@ hasta que lo hagas) y crea `app/(fr)/fr/page.tsx` con su layout.
 
 ## Decisiones de diseño y rendimiento
 
-Deliberadas; conviene no revertirlas sin medir:
+Deliberadas; conviene no revertirlas sin medir. Salen del análisis del 2026-11-11 (cuatro
+revisiones: estrategia UX, dirección de arte, interacción y la mirada de quien visita).
 
-- **Un solo acento de color y contraste AA** en los dos temas (ratios anotados al principio
-  de `globals.css`). El texto sobre `bg-primary` usa siempre `text-on-primary`.
-- **Sin librería de animación ni revelados al hacer scroll.** Se mueven la entrada del
-  Hero (`@keyframes`) y los pipelines de la sección de video (`Pipeline.tsx`: un
-  `setTimeout` por paso y transiciones de CSS). Los pipelines solo avanzan mientras están
-  en pantalla, tienen botón de pausa, no cambian de alto al avanzar (los paneles se apilan
-  en la misma celda) y con `prefers-reduced-motion` no arrancan solos.
+- **La página les habla a empleadores.** Primero el trabajo: Hero → Proyectos → Video →
+  Sitios web → Perfil (sobre mí, experiencia, formación, habilidades e idiomas juntos) →
+  Contacto. El `h1` es el posicionamiento (`profile.tagline`, elegido por Sebas) y al lado
+  van tres pruebas (`highlights`) que llevan a su proyecto. Pasó de ~11 a ~7 pantallas en
+  escritorio.
+- **Un solo acento verde** (lo eligió Sebas) sobre grafito con un toque de verde; nada más
+  lleva color. Las puertas que esperan aprobación van con contorno y un punto que parpadea;
+  lo aprobado, en verde sólido con ✓ (`primary` y `approved` son tokens aparte, hoy con el
+  mismo verde). Contraste AA en los dos temas; `npm test` recalcula los ratios desde
+  `globals.css`.
+- **Dos moldes de sección** (`Section` en `ui.tsx`): `stage` (título grande y angosto arriba)
+  y `aside` (título a la izquierda, tipo CV), con bandas que alternan fondo (`raised`). Las
+  tarjetas usan `bg-surface`, que se invierte dentro de una banda.
+- **Titulares angostos con la misma fuente**: Bricolage Grotesque variable con su eje
+  `wdth` (clase `.display`); ninguna familia nueva.
+- **Sin librería de animación ni revelados al hacer scroll.** Solo se mueve lo que tiene
+  sentido o responde a una acción: la entrada del Hero y su sello «Aprobado» (`@keyframes`,
+  una vez), la barra de progreso de lectura (CSS `animation-timeline`, sin JS), las tarjetas
+  al pasar el ratón y los pipelines (`Pipeline.tsx`). Los pipelines solo avanzan en
+  pantalla, tienen botón de pausa, no cambian de alto (cero CLS) y con
+  `prefers-reduced-motion` no arrancan.
+- **Video por capas**: los reels a la vista y el proceso (pipelines y «Del código al
+  video») plegado en `<details>` nativos, sin JS.
 - **Componentes de servidor por defecto.** Sólo declaran `'use client'` `Navbar`,
   `ThemeToggle`, `ProjectVideo`, `ContactForm`, `VideoDialog`, `Pipeline`, `ScriptSync`
   y `ReelCard`. `LanguageToggle` no lo declara, pero llega al cliente porque lo importa
@@ -173,7 +191,9 @@ Deliberadas; conviene no revertirlas sin medir:
 - **Reels: solo el póster hasta que hay intención.** Las tarjetas cargan un webp de
   ~10-30 KB (`loading="lazy"`); el vídeo se monta al pasar el ratón (mudo) o al hacer
   clic (modal con sonido). El reel destacado arranca mudo en escritorio al entrar en
-  pantalla y se pausa al salir; en móvil o con ahorro de datos espera al play.
+  pantalla y se pausa al salir; en móvil, con ahorro de datos o con «reducir movimiento»
+  espera al play. Lo mismo la demo de SEBSBOT, que además tiene botón de pausa y muestra
+  un cuadro del propio vídeo como póster.
 - **`content-visibility: auto`** en las secciones (`.section-defer`). Crea un bloque
   contenedor para `position: fixed`, por eso el modal del vídeo va en un portal a `<body>`.
 - **Vídeo de demo de SEBSBOT** remoto: no se descarga hasta que la tarjeta se acerca al

@@ -1,33 +1,39 @@
 import { ArrowUpRight } from 'lucide-react';
 import { content } from '../lib/content';
 import type { Dictionary } from '../lib/i18n';
-import { Chips, Section } from './ui';
+import { Section } from './ui';
 
-/** Lista densa en lugar de tarjetas: son 9 sitios y se leen mejor en filas. */
+/**
+ * Un índice: 9 sitios, cada uno una fila entera que enlaza (objetivo táctil
+ * grande). Nombre grande y angosto; dominio y stack en una línea monoespaciada,
+ * que en móvil ocupa la mitad que las etiquetas sueltas.
+ */
 export default function Websites({ dict }: { dict: Dictionary }) {
   return (
-    <Section id="websites" title={dict.nav.websites}>
+    <Section id="websites" title={dict.nav.websites} layout="aside" raised>
       <ul className="divide-y divide-neutral/15 border-y border-neutral/15">
         {content.websites.map((site) => (
-          <li
-            key={site.url}
-            className="grid gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-6"
-          >
+          <li key={site.url}>
             <a
               href={site.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-block min-w-0"
+              className="group grid gap-x-6 gap-y-1 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline"
             >
-              <span className="flex items-center gap-1.5 font-semibold text-foreground group-hover:text-primary">
+              <span className="display flex items-center gap-2 text-2xl font-bold text-foreground transition-colors group-hover:text-primary sm:text-3xl">
                 {site.name}
-                <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <ArrowUpRight
+                  className="h-5 w-5 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  aria-hidden="true"
+                />
               </span>
-              <span className="block truncate text-sm text-neutral-variant">
+              <span className="font-mono text-xs text-neutral-variant sm:text-right">
                 {new URL(site.url).hostname.replace(/^www\./, '')}
+                <span aria-hidden="true"> · </span>
+                <span className="sr-only">, {dict.websites.stack}: </span>
+                {site.technologies.join(' · ')}
               </span>
             </a>
-            <Chips items={site.technologies} label={dict.websites.stack} />
           </li>
         ))}
       </ul>

@@ -1,26 +1,36 @@
 @import "tailwindcss";
 
-/* Contrastes (WCAG 2.1) calculados con la fórmula de luminancia relativa:
-   oscuro: primary 10,6:1 sobre el fondo; on-primary sobre primary 10,3:1;
-           neutral-variant 7,3:1.
-   claro:  primary 5,4:1 sobre blanco; on-primary (blanco) sobre primary 5,4:1;
-           neutral-variant 6,7:1. */
+/* Dirección «Visto bueno»: la IA produce y Sebas firma. Un solo acento, verde
+   (lo eligió Sebas el 2026-11-11), y nada más con color:
+   - primary: el CTA, los enlaces y las puertas que esperan aprobación.
+   - approved: lo ya aprobado o terminado. Hoy es el mismo verde; esperar y
+     aprobado se distinguen por el relleno (contorno con punto que parpadea
+     frente a sólido con ✓). Es un token aparte por si algún día cambian.
+
+   Contrastes WCAG 2.1 (sobre fondo / sobre tarjeta). tests/content.test.mjs los
+   recalcula desde este archivo y falla por debajo de 4,5:1.
+   oscuro: foreground 16,1/14,9 · neutral-variant 7,8/7,2 · neutral 6,1/5,6 ·
+           primary = approved 10,8/10,0 · error 6,7/6,2 · on-primary/primary 10,3
+   claro:  foreground 16,9/18,0 · neutral-variant 6,7/7,2 · neutral 5,3/5,6 ·
+           primary = approved 5,0/5,4 · error 5,3/5,6 · on-primary/primary 5,4 */
 :root {
   color-scheme: dark;
 
   /* Modo oscuro (por defecto): grafito con un toque de verde, no negro puro. */
   --primary: #7bd88f;
   --on-primary: #0b1a10;
+  --approved: #7bd88f;
+  --on-approved: #0b1a10;
   --error: #ff6b61;
-  --neutral: #8d9792;
-  --neutral-variant: #9ba59f;
-  --background: #101513;
-  --foreground: #e8ece9;
-  --card-bg: #161c19;
+  --neutral: #879690;
+  --neutral-variant: #9daaa2;
+  --background: #0e1311;
+  --foreground: #e9efea;
+  --card-bg: #151c18;
 
   /* Superficie del navbar. Componentes separados por espacios: la notación
      rgb(R G B / alfa) no admite comas mezcladas con la barra. */
-  --nav-rgb: 16 21 19;
+  --nav-rgb: 14 19 17;
 }
 
 /* Modo claro */
@@ -29,27 +39,41 @@
 
   --primary: #1f7a3a;
   --on-primary: #ffffff;
+  --approved: #1f7a3a;
+  --on-approved: #ffffff;
   --error: #c62828;
   --neutral: #5f6a64;
   --neutral-variant: #4f5a54;
-  --background: #f6f7f4;
-  --foreground: #121815;
+  --background: #f5f8f5;
+  --foreground: #111814;
   --card-bg: #ffffff;
 
-  --nav-rgb: 246 247 244;
+  --nav-rgb: 245 248 245;
 }
 
 @theme inline {
   --color-primary: var(--primary);
   --color-on-primary: var(--on-primary);
+  --color-approved: var(--approved);
+  --color-on-approved: var(--on-approved);
   --color-error: var(--error);
   --color-neutral: var(--neutral);
   --color-neutral-variant: var(--neutral-variant);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card-bg: var(--card-bg);
+  --color-surface: var(--surface);
   --font-sans: var(--font-display), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-mono-code), ui-monospace, monospace;
+}
+
+/* Fondo de las tarjetas: card-bg sobre el fondo base y el fondo base dentro de
+   una banda elevada (Section con `raised`), para que siempre contrasten. */
+:root {
+  --surface: var(--card-bg);
+}
+.raised {
+  --surface: var(--background);
 }
 
 @layer base {
@@ -99,6 +123,30 @@
 @keyframes blink {
   50% {
     opacity: 0;
+  }
+}
+
+/* Sello «Aprobado» del Hero y barra de progreso de lectura. */
+@keyframes stamp-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+    transform: scale(1.6) rotate(-14deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-6deg);
+  }
+}
+
+@keyframes progress {
+  to {
+    transform: scaleX(1);
   }
 }
 
@@ -168,6 +216,38 @@
   }
   .blink {
     animation: blink 1s steps(1) infinite;
+  }
+
+  /* Titulares angostos: Bricolage Grotesque tiene eje de ancho (wdth 75-100),
+     cargado con `axes` en RootDocument. Sin él, el navegador ignora esto. */
+  .display {
+    font-stretch: 78%;
+  }
+
+  /* Sello del Hero: «Espera mi aprobación» se va y «Aprobado» cae encima,
+     en la misma celda. Una sola vez, al cargar. */
+  .stamp-wait {
+    animation: stamp-out 0.2s ease-in 1.6s both;
+  }
+  .stamp-ok {
+    animation: stamp-in 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) 1.75s both;
+  }
+
+  /* Progreso de lectura en el header: lo anima el compositor con un scroll
+     timeline, sin JS. Si el navegador no lo soporta, no se muestra. */
+  .scroll-progress {
+    display: none;
+  }
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .scroll-progress {
+        display: block;
+        transform-origin: 0 50%;
+        transform: scaleX(0);
+        animation: progress linear both;
+        animation-timeline: scroll(root);
+      }
+    }
   }
 
   /* Botones. El texto sobre primary usa --on-primary, nunca blanco fijo. */
@@ -266,5 +346,14 @@
   .anim-scale {
     opacity: 1 !important;
     transform: none !important;
+  }
+  /* El sello tiene retardo: sin esto esperaría 1,6 s y luego saltaría. */
+  .stamp-wait {
+    animation: none !important;
+    opacity: 0;
+  }
+  .stamp-ok {
+    animation: none !important;
+    transform: rotate(-6deg);
   }
 }

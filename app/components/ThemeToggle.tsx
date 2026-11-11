@@ -5,7 +5,12 @@ import { useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark';
 
-export default function ThemeToggle({ toLight, toDark }: { toLight: string; toDark: string }) {
+/**
+ * Interruptor de modo claro. Etiqueta fija («Modo claro») + `aria-pressed`: el
+ * lector anuncia «Modo claro, botón activado/desactivado». Cambiar la etiqueta
+ * además del estado lo anunciaba dos veces y se contradecía.
+ */
+export default function ThemeToggle({ label }: { label: string }) {
   const [theme, setTheme] = useState<Theme | null>(null);
 
   useEffect(() => {
@@ -34,7 +39,7 @@ export default function ThemeToggle({ toLight, toDark }: { toLight: string; toDa
       onClick={toggleTheme}
       disabled={theme === null}
       className="relative h-7 w-14 shrink-0 rounded-full border border-neutral/30 bg-neutral/20 transition-colors hover:border-primary/50 disabled:cursor-default"
-      aria-label={isDark ? toLight : toDark}
+      aria-label={label}
       aria-pressed={!isDark}
     >
       <span

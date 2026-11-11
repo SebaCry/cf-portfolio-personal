@@ -1,8 +1,8 @@
 'use client';
 
-import { Play } from 'lucide-react';
+import { Pause, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { isFrugal, useInView } from '../lib/media';
+import { isFrugal, prefersReducedMotion, useInView } from '../lib/media';
 import VideoDialog from './VideoDialog';
 
 /**
@@ -15,37 +15,50 @@ type VideoLabels = {
   expand: string;
   dialog: string;
   close: string;
+  pause: string;
+  play: string;
 };
 
 type ProjectVideoProps = {
   src: string;
+  /** Cuadro del propio vídeo (webp en public/). Sin él, un degradado CSS. */
+  poster?: string;
   labels: VideoLabels;
 };
 
 /**
- * El vídeo de demo pesa varios MB. Antes se descargaba con autoPlay en cuanto
- * se parseaba el HTML, compitiendo con el CSS, las fuentes y la imagen del
- * Hero por el ancho de banda. Ahora:
+ * El vídeo de demo pesa varios MB, así que:
  *
- *  - no se descarga nada hasta que la tarjeta se acerca al viewport;
- *  - en móvil o con "ahorro de datos" sólo se carga si el usuario pulsa play;
- *  - el póster es un marcador CSS, así que no añade ninguna petición.
+ *  - hasta que hace falta solo se ve el póster (lazy, unos 26 KB);
+ *  - el vídeo se monta al acercarse al viewport, salvo en móvil, con ahorro
+ *    de datos o con "reducir movimiento": ahí espera al clic;
+ *  - mientras corre en bucle tiene un botón de pausa (WCAG 2.2.2).
  */
-export default function ProjectVideo({ src, labels }: ProjectVideoProps) {
+export default function ProjectVideo({ src, poster, labels }: ProjectVideoProps) {
   const [isClicked, setIsClicked] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  // Hasta montar se asume frugal: el servidor no sabe qué conexión hay.
-  const [frugal, setFrugal] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  // Hasta montar se asume que no: el servidor no sabe qué conexión hay.
+  const [canAutoplay, setCanAutoplay] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const isNear = useInView(containerRef, { rootMargin: '200px', once: true });
 
-  useEffect(() => setFrugal(isFrugal()), []);
+  useEffect(() => setCanAutoplay(!isFrugal() && !prefersReducedMotion()), []);
 
-  const isLoaded = isClicked || (isNear && !frugal);
+  const isLoaded = isClicked || (isNear && canAutoplay);
 
   const openExpanded = () => {
     setIsClicked(true);
     setIsExpanded(true);
+  };
+
+  const togglePause = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) video.play().catch(() => {});
+    else video.pause();
+    setIsPaused(!video.paused);
   };
 
   return (
@@ -54,20 +67,37 @@ export default function ProjectVideo({ src, labels }: ProjectVideoProps) {
         ref={containerRef}
         className="group/video relative aspect-video w-full overflow-hidden rounded-xl bg-neutral/5"
       >
-        {isLoaded ? (
+        {poster ? (
+          // eslint-disable-next-line @next/next/no-img-element -- webp ya a su tamaño; next/image no aporta
+          <img
+            src={poster}
+            alt=""
+            width={960}
+            height={540}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-card-bg to-card-bg" />
+        )}
+
+        {isLoaded && (
           <video
+            ref={videoRef}
             src={src}
+            // Mismo póster (ya en caché): sin él, el vídeo tapa la imagen con negro mientras carga.
+            poster={poster}
             autoPlay
             loop
             muted
             playsInline
             preload="metadata"
             aria-label={labels.video}
-            className="h-full w-full object-cover"
+            onPlay={() => setIsPaused(false)}
+            onPause={() => setIsPaused(true)}
+            className="absolute inset-0 h-full w-full object-cover"
           />
-        ) : (
-          /* Póster hecho con CSS: cero peticiones extra. */
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-card-bg to-card-bg" />
         )}
 
         <button
@@ -84,6 +114,21 @@ export default function ProjectVideo({ src, labels }: ProjectVideoProps) {
             <Play className="ml-1 h-7 w-7 fill-white text-white" aria-hidden="true" />
           </span>
         </button>
+
+        {isLoaded && (
+          <button
+            type="button"
+            onClick={togglePause}
+            aria-label={isPaused ? labels.play : labels.pause}
+            className="absolute right-3 bottom-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+          >
+            {isPaused ? (
+              <Play className="ml-0.5 h-4 w-4 fill-white" aria-hidden="true" />
+            ) : (
+              <Pause className="h-4 w-4 fill-white" aria-hidden="true" />
+            )}
+          </button>
+        )}
       </div>
 
       {isExpanded && (

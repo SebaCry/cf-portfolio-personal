@@ -17,18 +17,17 @@ export default function Contact({ dict }: { dict: Dictionary }) {
   ];
 
   return (
-    <Section id="contact" title={dict.nav.contact}>
-      <p className="max-w-prose text-lg leading-relaxed text-neutral-variant">{t.description}</p>
-
-      <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
+    <Section id="contact" title={dict.nav.contact} intro={t.description} raised>
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
         <div>
           <dl className="space-y-5">
             {channels.map((channel) => (
               <div key={channel.label}>
                 <dt className="text-sm text-neutral-variant">{channel.label}</dt>
                 <dd className="mt-1 text-lg font-medium text-foreground">
+                  {/* `.link`: en pantalla táctil no hay hover, así que tiene que verse enlace. */}
                   {channel.href ? (
-                    <a href={channel.href} className="hover:text-primary">
+                    <a href={channel.href} className="link">
                       {channel.value}
                     </a>
                   ) : (
